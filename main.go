@@ -14,6 +14,8 @@ import (
 const API_URL = "https://api.telegram.org/bot"
 
 func main() {
+	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+
 	offset := 0
 
 	for {
@@ -30,6 +32,7 @@ func main() {
 		}
 		time.Sleep(time.Second)
 	}
+
 }
 
 func buildUrl(param string) string {
@@ -63,7 +66,7 @@ func respond(msg Message) error {
 		log.Fatal(err)
 		return err
 	}
-	_, err = http.Post(API_URL+"/sendMessage", "application/json", bytes.NewBuffer(body))
+	_, err = http.Post(buildUrl("/sendMessage"), "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err)
 		return err
