@@ -26,3 +26,8 @@ type RestResponse struct {
 	Status bool     `json:"ok"`
 	Result []Update `json:"result"`
 }
+
+type BotMessage struct {
+	ChatId int    `json:"chat_id"`
+	Text   string `json:"text"`
+}
