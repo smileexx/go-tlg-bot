@@ -14,6 +14,7 @@ import (
 const API_URL = "https://api.telegram.org/bot"
 
 func main() {
+	log.Println("============== Run ==============")
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	offset := 0
