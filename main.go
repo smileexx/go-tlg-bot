@@ -7,11 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
-const BOT_TOKEN = "2036907836:AAGIRjFvj4HGFRKZ9kBysjrMPXJ6oOpZ278"
-const API_URL = "https://api.telegram.org/bot" + BOT_TOKEN
+const API_URL = "https://api.telegram.org/bot"
 
 func main() {
 	offset := 0
@@ -26,15 +26,19 @@ func main() {
 		for _, update := range updates {
 			offset = update.UpdateId + 1
 			log.Println(update.Message)
-			respond(update.Message)
+			err = respond(update.Message)
 		}
 		time.Sleep(time.Second)
 	}
 }
 
+func buildUrl(param string) string {
+	return API_URL + os.Getenv("BOT_TOKEN") + param
+}
+
 func getUpdates(offset int) ([]Update, error) {
 	// http.NewRequest("GET", API_URL+"/getMe")
-	resp, err := http.Get(API_URL + "/getUpdates?offset=" + fmt.Sprint(offset))
+	resp, err := http.Get(buildUrl("/getUpdates?offset=" + fmt.Sprint(offset)))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
