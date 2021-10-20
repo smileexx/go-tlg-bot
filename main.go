@@ -14,7 +14,6 @@ import (
 const API_URL = "https://api.telegram.org/bot"
 
 func main() {
-	fmt.Println("BOT_TOKEN", os.Getenv("BOT_TOKEN"))
 	offset := 0
 
 	for {
