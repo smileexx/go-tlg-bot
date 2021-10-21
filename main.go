@@ -27,7 +27,7 @@ func main() {
 	})
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
-	offset := 0
+	// offset := 0
 
 	// for {
 	// 	currentTime := time.Now()
