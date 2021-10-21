@@ -1,4 +1,4 @@
-package main
+package telegram
 
 type Chat struct {
 	ChatId int `json:"id"`
