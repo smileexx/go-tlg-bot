@@ -16,16 +16,18 @@ const API_URL = "https://api.telegram.org/bot"
 func main() {
 	log.Println("============== Run ==============")
 
+	// Wake Up on cron
 	http.HandleFunc("/wakeup", func(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, "Awake!")
 	})
 
+	// Hnadle Bot Webhook updates
 	http.HandleFunc("/"+os.Getenv("BOT_TOKEN"), func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 		body, _ := ioutil.ReadAll(req.Body)
 		fmt.Printf("%s", body)
 	})
-	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	// offset := 0
 
