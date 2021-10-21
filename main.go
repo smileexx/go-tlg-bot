@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,6 +16,10 @@ const API_URL = "https://api.telegram.org/bot"
 
 func main() {
 	log.Println("============== Run ==============")
+
+	http.HandleFunc("/wakeup", func(w http.ResponseWriter, req *http.Request) {
+		io.WriteString(w, "Awake!")
+	})
 	go http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 
 	offset := 0
