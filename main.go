@@ -60,7 +60,7 @@ func handleUpdate(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(200)
 	body, _ := ioutil.ReadAll(req.Body)
-	log.Println(body)
+	log.Println(string(body))
 	var update Update
 	err := json.Unmarshal(body, &update)
 	if err != nil {
@@ -84,7 +84,7 @@ func getUpdates(offset int) ([]Update, error) {
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println(body)
+	log.Println(string(body))
 
 	var restResponse RestResponse
 	err = json.Unmarshal(body, &restResponse)
