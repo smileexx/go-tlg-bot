@@ -33,6 +33,10 @@ func HandleUpdate(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func sendPhoto() {
+
+}
+
 func respond(msg Message) error {
 	botMsg := BotMessage{ChatId: msg.Chat.ChatId, Text: ">>" + msg.Text}
 	body, err := json.Marshal(botMsg)

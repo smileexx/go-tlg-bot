@@ -11,6 +11,7 @@ import (
 )
 
 var ctx = context.TODO()
+var client *mongo.Database
 
 func Connect() {
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGO_URI"))
