@@ -1,7 +1,7 @@
 package telegram
 
 /**
-|	Types
+| ============== Types ============== |
 */
 type Chat struct {
 	Id    int    `json:"id"`
@@ -29,11 +29,6 @@ type Update struct {
 	EditedMessage Message `json:"edited_message"`
 }
 
-type RestResponse struct {
-	Status bool     `json:"ok"`
-	Result []Update `json:"result"`
-}
-
 type InputMediaPhoto struct {
 	Type    string `json:"type"`  // val = photo
 	Media   string `json:"media"` // a file_id that exists on the Telegram OR  an HTTP URL
@@ -41,7 +36,15 @@ type InputMediaPhoto struct {
 }
 
 /**
-| Structures to be sent
+| ============== Custom Types ============== |
+*/
+type RestResponse struct {
+	Status bool     `json:"ok"`
+	Result []Update `json:"result"`
+}
+
+/**
+| ============== Structures to be sent ============== |
 */
 type OutMessage struct {
 	ChatId        int    `json:"chat_id"`

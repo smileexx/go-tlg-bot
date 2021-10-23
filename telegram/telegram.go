@@ -3,13 +3,16 @@ package telegram
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 const (
+	PathSetWebhook     = "/setWebhook"
 	PathSendMessage    = "/sendMessage"
 	PathSendPhoto      = "/sendPhoto"
 	PathSendMediaGroup = "/sendMediaGroup"
@@ -17,11 +20,11 @@ const (
 
 const API_URL = "https://api.telegram.org/bot"
 
-func buildUrl(param string) string {
+func BuildUrl(param string) string {
 	return API_URL + os.Getenv("BOT_TOKEN") + param
 }
 
-func HandleUpdate(w http.ResponseWriter, req *http.Request) {
+func HandleWebhook(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(200)
 	body, _ := ioutil.ReadAll(req.Body)
 	log.Println(string(body))
@@ -32,11 +35,15 @@ func HandleUpdate(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(update)
-	err = sendMessage(update.Message)
+	err = handleMessage(update.Message)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func handleMessage(msg Message) error {
+	return sendMessage(msg)
 }
 
 func sendPhoto(msg Message) error {
@@ -45,7 +52,11 @@ func sendPhoto(msg Message) error {
 }
 
 func sendMessage(msg Message) error {
-	outData := OutMessage{ChatId: msg.Chat.Id, Text: ">>" + msg.Text}
+	outData := OutMessage{
+		ChatId:        msg.Chat.Id,
+		Text:          ">>" + msg.Text,
+		ReplayToMsgId: msg.Id,
+	}
 	return sendJson(PathSendMessage, outData)
 }
 
@@ -55,7 +66,7 @@ func sendJson(urlPath string, outData interface{}) error {
 		log.Fatal(err)
 		return err
 	}
-	_, err = http.Post(buildUrl(urlPath), "application/json", bytes.NewBuffer(body))
+	_, err = http.Post(BuildUrl(urlPath), "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -63,10 +74,20 @@ func sendJson(urlPath string, outData interface{}) error {
 	return nil
 }
 
-/*
+func DeleteWebhook() {
+	http.Get(BuildUrl(PathSetWebhook + "?url="))
+}
+
+func SetWebhook() {
+	http.Get(BuildUrl(PathSetWebhook + "?url=" + os.Getenv("HOST") + os.Getenv("BOT_TOKEN")))
+}
+
+/**
+| ==================== For local =====================
+*/
 func getUpdates(offset int) ([]Update, error) {
 	// http.NewRequest("GET", API_URL+"/getMe")
-	resp, err := http.Get(buildUrl("/getUpdates?offset=" + fmt.Sprint(offset)))
+	resp, err := http.Get(BuildUrl("/getUpdates?offset=" + fmt.Sprint(offset)))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -84,13 +105,9 @@ func getUpdates(offset int) ([]Update, error) {
 	return restResponse.Result, nil
 }
 
-func updateLoop() {
-
+func UpdateLoop() {
 	offset := 0
-
 	for {
-		currentTime := time.Now()
-		log.Println(currentTime.Format("2006-01-02 15:04:05.000000"))
 		updates, err := getUpdates(offset)
 		if err != nil {
 			log.Fatal(err)
@@ -98,7 +115,7 @@ func updateLoop() {
 		for _, update := range updates {
 			offset = update.UpdateId + 1
 			log.Println(update.Message)
-			err = respond(update.Message)
+			err = handleMessage(update.Message)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -106,4 +123,3 @@ func updateLoop() {
 		time.Sleep(time.Second)
 	}
 }
-*/
