@@ -31,12 +31,14 @@ func Init() {
 	db = client.Database(dbName)
 }
 
-func GetImages() {
+func GetImages() []Image {
 	imagesCollection := db.Collection("images")
-	opt := options.Find()
-	// opt.SetSort(bson.D{{"_id", -1}})
-	opt.SetLimit(2)
-	cursor, err := imagesCollection.Find(ctx, bson.M{}, opt)
+	// opt := options.Find()
+	// // opt.SetSort(bson.D{{"_id", -1}})
+	// opt.SetLimit(100)
+	matchStage := bson.D{{"$match", bson.D{{"shown", bson.D{{"$in", bson.A{nil, false}}}}}}}
+	matchSample := bson.D{{"$sample", bson.D{{"size", 50}}}}
+	cursor, err := imagesCollection.Aggregate(ctx, mongo.Pipeline{matchStage, matchSample})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,4 +47,5 @@ func GetImages() {
 		log.Fatal(err)
 	}
 	fmt.Println(images)
+	return images
 }

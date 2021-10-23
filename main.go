@@ -15,7 +15,7 @@ func main() {
 		log.Println("Run UpdateLoop")
 		// remove webhook for local server
 		telegram.DeleteWebhook()
-		telegram.UpdateLoop()
+		updateLoop()
 	} else {
 		log.Println("Run ListenAndServe")
 		telegram.SetWebhook()
@@ -30,6 +30,6 @@ func listenServer() {
 	})
 
 	// Handle Bot WebHook updates
-	http.HandleFunc("/"+os.Getenv("BOT_TOKEN"), telegram.HandleWebhook)
+	http.HandleFunc("/"+os.Getenv("BOT_TOKEN"), handleTelegramWebhook)
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }

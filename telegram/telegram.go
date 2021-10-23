@@ -3,12 +3,10 @@ package telegram
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 const (
@@ -46,9 +44,15 @@ func handleMessage(msg Message) error {
 	return sendMessage(msg)
 }
 
-func sendPhoto(msg Message) error {
-	outData := OutPhoto{ChatId: msg.Chat.Id, Photo: "http://"}
-	return sendJson(PathSendMessage, outData)
+func SendPhoto(msg Message, srcUrl string, caption string) error {
+	// outData := OutPhoto{ChatId: msg.Chat.Id, Photo: srcUrl}
+	outPhoto := OutPhoto{
+		ChatId:  msg.Chat.Id,
+		Photo:   srcUrl,
+		Caption: caption,
+	}
+	outPhoto.ReplayToMsgId = msg.Id
+	return sendJson(PathSendPhoto, outPhoto)
 }
 
 func sendMessage(msg Message) error {
@@ -80,46 +84,4 @@ func DeleteWebhook() {
 
 func SetWebhook() {
 	http.Get(BuildUrl(PathSetWebhook + "?url=" + os.Getenv("HOST") + os.Getenv("BOT_TOKEN")))
-}
-
-/**
-| ==================== For local =====================
-*/
-func getUpdates(offset int) ([]Update, error) {
-	// http.NewRequest("GET", API_URL+"/getMe")
-	resp, err := http.Get(BuildUrl("/getUpdates?offset=" + fmt.Sprint(offset)))
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println(string(body))
-
-	var restResponse RestResponse
-	err = json.Unmarshal(body, &restResponse)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	return restResponse.Result, nil
-}
-
-func UpdateLoop() {
-	offset := 0
-	for {
-		updates, err := getUpdates(offset)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, update := range updates {
-			offset = update.UpdateId + 1
-			log.Println(update.Message)
-			err = handleMessage(update.Message)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-		time.Sleep(time.Second)
-	}
 }
