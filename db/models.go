@@ -6,9 +6,18 @@ type Content struct {
 	Name   string `bson:"name"`
 }
 
-type Image struct {
+type OldImage struct {
 	Id     string `bson:"id"`
 	SrcUrl string `bson:"src"`
 	Shown  bool   `bson:"shown"`
-	Tags   string `bson:"tags"`
+	Tags   string `bson:"tags,omitempty"`
+	PostId string `bson:"post,omitempty"`
+}
+
+type Post struct {
+	Id     string   `bson:"id"`
+	Images []string `bson:"images"`
+	Gifs   []string `bson:"gifs"`
+	Shown  bool     `bson:"shown"`
+	Tags   []string `bson:"tags"`
 }

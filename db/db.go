@@ -17,7 +17,7 @@ var ctx = context.TODO()
 var client *mongo.Client
 var db *mongo.Database
 
-func Init() {
+func CreateConnection() {
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGO_URI"))
 	var err error
 	client, err = mongo.Connect(ctx, clientOptions)
@@ -31,7 +31,7 @@ func Init() {
 	db = client.Database(dbName)
 }
 
-func GetImages() []Image {
+func GetRandomImages() []OldImage {
 	imagesCollection := db.Collection("images")
 	// opt := options.Find()
 	// // opt.SetSort(bson.D{{"_id", -1}})
@@ -42,10 +42,40 @@ func GetImages() []Image {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var images []Image
+	var images []OldImage
 	if err = cursor.All(ctx, &images); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(images)
 	return images
+}
+
+func InsertPosts(posts []Post) {
+	postsCollection := db.Collection("posts")
+	var docs []interface{}
+
+	for _, post := range posts {
+		doc, _ := bson.Marshal(post)
+		docs = append(docs, doc)
+	}
+	// docs, err := bson.(posts)
+	res, err := postsCollection.InsertMany(ctx, docs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(res)
+}
+
+func SelectPostGifs() {
+	postsCollection := db.Collection("posts")
+
+	cursor, err := postsCollection.Find(ctx, bson.D{{"gifs", bson.A{bson.D{{"$exists", true}}, bson.D{{"$ne", bson.A{}}}}}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var posts []Post
+	if err = cursor.All(ctx, &posts); err != nil {
+		log.Fatal(err)
+	}
+	log.Println(posts)
 }

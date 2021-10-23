@@ -11,6 +11,10 @@ import (
 func main() {
 	log.Println("============== Run ==============")
 
+	// parser.Request()
+	//db.SelectPostGifs()
+	//os.Exit(0)
+
 	if os.Getenv("MODE") == "local" {
 		log.Println("Run UpdateLoop")
 		// remove webhook for local server

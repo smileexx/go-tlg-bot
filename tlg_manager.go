@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	db.Init()
+	db.CreateConnection()
 }
 
 func handleTelegramWebhook(w http.ResponseWriter, req *http.Request) {
@@ -28,7 +28,24 @@ func handleTelegramWebhook(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(update)
-	reactOnMessage(update.Message)
+	err = reactOnMessage(update.Message)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func reactOnMessage(msg telegram.Message) error {
+	//TODO: do something if needs
+
+	if strings.HasPrefix(msg.Text, "/boobs") {
+		images := db.GetRandomImages()
+		i := rand.Intn(len(images))
+		image := images[i]
+		return telegram.SendPhoto(msg, image.SrcUrl, image.Tags)
+	}
+
+	return nil
 }
 
 /**
@@ -71,17 +88,4 @@ func updateLoop() {
 		}
 		time.Sleep(time.Second)
 	}
-}
-
-func reactOnMessage(msg telegram.Message) error {
-	//TODO: do something if needs
-
-	if strings.HasPrefix(msg.Text, "/boobs") {
-		images := db.GetImages()
-		i := rand.Intn(len(images))
-		image := images[i]
-		return telegram.SendPhoto(msg, image.SrcUrl, image.Tags)
-	}
-
-	return nil
 }
