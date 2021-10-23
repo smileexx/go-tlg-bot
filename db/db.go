@@ -3,19 +3,24 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"os"
 )
 
-var ctx = context.TODO()
-var client *mongo.Database
+const dbName = "tlg-bot-db"
 
-func Connect() {
+var ctx = context.TODO()
+var client *mongo.Client
+var db *mongo.Database
+
+func Init() {
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGO_URI"))
-	client, err := mongo.Connect(ctx, clientOptions)
+	var err error
+	client, err = mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,14 +28,21 @@ func Connect() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	contentCollection := client.Database("tlg-bot-db").Collection("content")
-	cursor, err := contentCollection.Find(ctx, bson.M{})
+	db = client.Database(dbName)
+}
+
+func GetImages() {
+	imagesCollection := db.Collection("images")
+	opt := options.Find()
+	// opt.SetSort(bson.D{{"_id", -1}})
+	opt.SetLimit(2)
+	cursor, err := imagesCollection.Find(ctx, bson.M{}, opt)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var cont []Content
-	if err = cursor.All(ctx, &cont); err != nil {
+	var images []Image
+	if err = cursor.All(ctx, &images); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(cont)
+	fmt.Println(images)
 }

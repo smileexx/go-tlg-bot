@@ -9,6 +9,12 @@ import (
 	"os"
 )
 
+const (
+	PathSendMessage    = "/sendMessage"
+	PathSendPhoto      = "/sendPhoto"
+	PathSendMediaGroup = "/sendMediaGroup"
+)
+
 const API_URL = "https://api.telegram.org/bot"
 
 func buildUrl(param string) string {
@@ -26,25 +32,30 @@ func HandleUpdate(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(update)
-	err = respond(update.Message)
+	err = sendMessage(update.Message)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func sendPhoto() {
-
+func sendPhoto(msg Message) error {
+	outData := OutPhoto{ChatId: msg.Chat.Id, Photo: "http://"}
+	return sendJson(PathSendMessage, outData)
 }
 
-func respond(msg Message) error {
-	botMsg := BotMessage{ChatId: msg.Chat.ChatId, Text: ">>" + msg.Text}
-	body, err := json.Marshal(botMsg)
+func sendMessage(msg Message) error {
+	outData := OutMessage{ChatId: msg.Chat.Id, Text: ">>" + msg.Text}
+	return sendJson(PathSendMessage, outData)
+}
+
+func sendJson(urlPath string, outData interface{}) error {
+	body, err := json.Marshal(outData)
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
-	_, err = http.Post(buildUrl("/sendMessage"), "application/json", bytes.NewBuffer(body))
+	_, err = http.Post(buildUrl(urlPath), "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err)
 		return err

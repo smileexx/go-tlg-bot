@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"main/db"
 	"main/telegram"
 	"net/http"
 	"os"
@@ -11,8 +12,9 @@ import (
 func main() {
 	log.Println("============== Run ==============")
 
-	//db.Connect()
-	//os.Exit(0)
+	db.Init()
+	db.GetImages()
+	os.Exit(0)
 
 	// Wake Up on cron
 	http.HandleFunc("/wakeup", func(w http.ResponseWriter, req *http.Request) {
