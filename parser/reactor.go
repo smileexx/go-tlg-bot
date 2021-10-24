@@ -12,10 +12,26 @@ const postUrl = "http://joyreactor.cc/post/"
 
 var artTags = []string{"#3Dэротика", "#artбарышня", "#ero_art", "#арт_барышня"}
 
-func Request() {
-	res, err := http.Get("http://joyreactor.cc/tag/erotic/new")
+const (
+	MediaTypeImg = "img"
+	MediaTypeGif = "gif"
+)
+
+const (
+	videoSelector = "video source[type='video/mp4']"
+	imgSelector   = "img"
+)
+
+func Request(page string) {
+	if page != "" {
+		page = "/" + page
+	}
+	url := "http://joyreactor.cc/tag/erotic/new" + page
+	log.Println(url)
+	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
@@ -50,20 +66,15 @@ func Request() {
 		}
 
 		postEl.Find(".post_content .image").Each(func(i int, imageEl *goquery.Selection) {
-
-			videoEl := imageEl.Find("video source[type='video/mp4']")
-			if videoEl.Length() > 0 {
-				videoEl.Each(func(i int, srcEl *goquery.Selection) {
-					src, _ := srcEl.Attr("src")
-					post.Gifs = append(post.Gifs, src)
-				})
-			} else {
-				imageEl.Find("img").Each(func(i int, srcEl *goquery.Selection) {
-					src, _ := srcEl.Attr("src")
-					post.Images = append(post.Images, src)
-				})
+			media := db.Media{Shown: false}
+			if srcEl := imageEl.Find(videoSelector).First(); srcEl.Nodes != nil {
+				media.Src, _ = srcEl.Attr("src")
+				media.Type = MediaTypeGif
+			} else if srcEl := imageEl.Find(imgSelector).First(); srcEl.Nodes != nil {
+				media.Src, _ = srcEl.Attr("src")
+				media.Type = MediaTypeImg
 			}
-
+			post.Media = append(post.Media, media)
 		})
 		posts = append(posts, post)
 	})

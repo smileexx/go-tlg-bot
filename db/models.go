@@ -15,9 +15,13 @@ type OldImage struct {
 }
 
 type Post struct {
-	Id     string   `bson:"id"`
-	Images []string `bson:"images"`
-	Gifs   []string `bson:"gifs"`
-	Shown  bool     `bson:"shown"`
-	Tags   []string `bson:"tags"`
+	Id    string   `bson:"id"`
+	Media []Media  `bson:"media"`
+	Tags  []string `bson:"tags"`
+}
+
+type Media struct {
+	Type  string `bson:"type"`
+	Src   string `bson:"src"`
+	Shown bool   `bson:"shown"`
 }

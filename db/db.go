@@ -59,17 +59,37 @@ func InsertPosts(posts []Post) {
 		docs = append(docs, doc)
 	}
 	// docs, err := bson.(posts)
-	res, err := postsCollection.InsertMany(ctx, docs)
+	opt := options.InsertMany()
+	opt.SetOrdered(false)
+	res, err := postsCollection.InsertMany(ctx, docs, opt)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	log.Println(res)
 }
 
 func SelectPostGifs() {
 	postsCollection := db.Collection("posts")
+	// bdoc := bson.D{{"media", bson.D{{"$elemMatch", bson.D{{"shown", true},{"type", "gif"} }}}}}
+	var bdoc interface{}
+	err := bson.UnmarshalExtJSON([]byte(`{"media": {"$elemMatch":{"shown":false, "type": "gif"}} }`), true, &bdoc)
+	cursor, err := postsCollection.Find(ctx, bdoc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var posts []Post
+	if err = cursor.All(ctx, &posts); err != nil {
+		log.Fatal(err)
+	}
+	log.Println(posts)
+}
 
-	cursor, err := postsCollection.Find(ctx, bson.D{{"gifs", bson.A{bson.D{{"$exists", true}}, bson.D{{"$ne", bson.A{}}}}}})
+func SelectPostByTag(tag string) {
+	postsCollection := db.Collection("posts")
+	sel := fmt.Sprintf(`{"tags": "%s" }`, tag)
+	var bdoc interface{}
+	err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
+	cursor, err := postsCollection.Find(ctx, bdoc)
 	if err != nil {
 		log.Fatal(err)
 	}
