@@ -14,14 +14,14 @@ type OldImage struct {
 	PostId string `bson:"post,omitempty"`
 }
 
-type Post struct {
-	Id    string   `bson:"id"`
-	Media []Media  `bson:"media"`
-	Tags  []string `bson:"tags"`
-}
-
 type Media struct {
 	Type  string `bson:"type"`
 	Src   string `bson:"src"`
 	Shown bool   `bson:"shown"`
+}
+
+type Post struct {
+	Id    string   `bson:"id"`
+	Media []Media  `bson:"media"`
+	Tags  []string `bson:"tags"`
 }

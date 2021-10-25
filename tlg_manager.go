@@ -47,9 +47,11 @@ func reactOnMessage(msg telegram.Message) error {
 	if strings.HasPrefix(msg.Text, "/boobs") {
 		return commandBoobs(msg)
 	}
-
 	if strings.HasPrefix(msg.Text, "/tag") {
 		return commandTag(msg)
+	}
+	if strings.HasPrefix(msg.Text, "/post") {
+		return commandPost(msg)
 	}
 
 	return nil
@@ -68,10 +70,58 @@ func commandBoobs(msg telegram.Message) error {
 
 	i := rand.Intn(len(postsBuffer))
 	post := postsBuffer[i]
-	media := post.Media
 	// remove used item
 	postsBuffer = append(postsBuffer[:i], postsBuffer[i+1:]...)
 
+	return sendSingleMedia(msg, post)
+}
+
+func commandTag(msg telegram.Message) error {
+	regex := *regexp.MustCompile(`#[_\wА-Яа-я]+`)
+	tags := regex.FindStringSubmatch(msg.Text)
+	// exit if no tag
+	if len(tags) < 1 {
+		telegram.SendMessage(msg, "Command should contains > #tag")
+		return nil
+	}
+	tag := tags[0]
+	posts := db.SelectPostsByTag(tag)
+	// exit if no posts
+	if len(posts) < 1 {
+		telegram.SendMessage(msg, "Nothing found by tag "+tag)
+		return nil
+	}
+	i := rand.Intn(len(posts))
+	post := posts[i]
+	return sendSingleMedia(msg, post)
+}
+
+func commandPost(msg telegram.Message) error {
+	regex := *regexp.MustCompile(`/post\s+(\d+)`)
+	submatch := regex.FindStringSubmatch(msg.Text)
+	// exit if no tag
+	if len(submatch) < 2 {
+		telegram.SendMessage(msg, "Command should be like > `/post 4958161`")
+		return nil
+	}
+	postId := submatch[1]
+	post, err := db.SelectPostsById(postId)
+	// exit if no posts
+	if err != nil {
+		telegram.SendMessage(msg, "Nothing found by post ID "+postId)
+		return nil
+	}
+	if len(post.Media) > 1 {
+		return sendGroupedMedia(msg, *post)
+	} else if len(post.Media) == 1 {
+		return sendSingleMedia(msg, *post)
+	}
+
+	return nil
+}
+
+func sendSingleMedia(msg telegram.Message, post db.Post) error {
+	media := post.Media
 	j := rand.Intn(len(media))
 	item := media[j]
 	caption := strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
@@ -82,28 +132,26 @@ func commandBoobs(msg telegram.Message) error {
 	}
 }
 
-func commandTag(msg telegram.Message) error {
-	regex := *regexp.MustCompile(`#[_\wА-Яа-я]+`)
-	tag := regex.FindStringSubmatch(msg.Text)
-	if len(tag) < 1 {
-		return nil
+func sendGroupedMedia(msg telegram.Message, post db.Post) error {
+	var mediaItems []telegram.InputMediaItem
+	var err error
+	for _, media := range post.Media {
+		input := telegram.InputMediaItem{Media: media.Src}
+		if media.Type == parser.MediaTypeImg {
+			input.Type = "photo"
+		} else if media.Type == parser.MediaTypeMp4 {
+			err = telegram.SendVideo(msg, media.Src, "")
+			continue
+		}
+		if len(mediaItems) == 0 {
+			input.Caption = strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
+		}
+		mediaItems = append(mediaItems, input)
 	}
-	posts := db.SelectPostsByTag(tag[0])
-	// exit if no posts
-	if len(posts) < 1 {
-		return nil
+	if len(mediaItems) > 0 {
+		err = telegram.SendMediaGroup(msg, mediaItems)
 	}
-	i := rand.Intn(len(posts))
-	post := posts[i]
-	media := post.Media
-	j := rand.Intn(len(media))
-	item := media[j]
-	caption := strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
-	if item.Type == parser.MediaTypeImg {
-		return telegram.SendPhoto(msg, item.Src, caption)
-	} else {
-		return telegram.SendVideo(msg, item.Src, caption)
-	}
+	return err
 }
 
 /**

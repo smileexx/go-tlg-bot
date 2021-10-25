@@ -29,8 +29,8 @@ type Update struct {
 	EditedMessage Message `json:"edited_message"`
 }
 
-type InputMediaPhoto struct {
-	Type    string `json:"type"`  // val = photo
+type InputMediaItem struct {
+	Type    string `json:"type"`  // photo / video
 	Media   string `json:"media"` // a file_id that exists on the Telegram OR  an HTTP URL
 	Caption string `json:"caption,omitempty"`
 }
@@ -68,8 +68,8 @@ type OutVideo struct {
 	ReplayToMsgId   int    `json:"reply_to_message_id,omitempty"`
 }
 
-type OutMediaPhotoGroup struct {
-	ChatId        int               `json:"chat_id"`
-	Media         []InputMediaPhoto `json:"media"`
-	ReplayToMsgId int               `json:"reply_to_message_id,omitempty"`
+type OutMediaGroup struct {
+	ChatId        int              `json:"chat_id"`
+	Media         []InputMediaItem `json:"media"`
+	ReplayToMsgId int              `json:"reply_to_message_id,omitempty"`
 }

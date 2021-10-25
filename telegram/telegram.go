@@ -42,7 +42,7 @@ func HandleWebhook(w http.ResponseWriter, req *http.Request) {
 }
 
 func handleMessage(msg Message) error {
-	return sendMessage(msg)
+	return SendMessage(msg, "")
 }
 
 func SendPhoto(msg Message, srcUrl string, caption string) error {
@@ -67,13 +67,24 @@ func SendVideo(msg Message, srcUrl string, caption string) error {
 	return sendJson(PathSendVideo, outVideo)
 }
 
-func sendMessage(msg Message) error {
+func SendMessage(msg Message, text string) error {
+	if text == "" {
+		text = ">>" + msg.Text
+	}
 	outData := OutMessage{
 		ChatId:        msg.Chat.Id,
-		Text:          ">>" + msg.Text,
+		Text:          text,
 		ReplayToMsgId: msg.Id,
 	}
 	return sendJson(PathSendMessage, outData)
+}
+
+func SendMediaGroup(msg Message, media []InputMediaItem) error {
+	outData := OutMediaGroup{
+		ChatId: msg.Chat.Id,
+		Media:  media,
+	}
+	return sendJson(PathSendMediaGroup, outData)
 }
 
 func sendJson(urlPath string, outData interface{}) error {
@@ -82,7 +93,9 @@ func sendJson(urlPath string, outData interface{}) error {
 		log.Fatal(err)
 		return err
 	}
-	_, err = http.Post(BuildUrl(urlPath), "application/json", bytes.NewBuffer(body))
+	bodyBytes := bytes.NewBuffer(body)
+	log.Println(bodyBytes)
+	_, err = http.Post(BuildUrl(urlPath), "application/json", bodyBytes)
 	if err != nil {
 		log.Fatal(err)
 		return err

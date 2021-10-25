@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -102,7 +103,7 @@ func SelectPostGifs() {
 
 func SelectPostsByTag(tag string) []Post {
 	postsCollection := db.Collection("posts")
-	sel := fmt.Sprintf(`{"tags": "%s" }`, tag)
+	sel := fmt.Sprintf(`{"tags": { "tags" : { $regex : /"%s"/i } } }`, tag)
 	var bdoc interface{}
 	err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
 	cursor, err := postsCollection.Find(ctx, bdoc)
@@ -114,4 +115,21 @@ func SelectPostsByTag(tag string) []Post {
 		log.Fatal(err)
 	}
 	return posts
+}
+
+func SelectPostsById(postId string) (*Post, error) {
+	postsCollection := db.Collection("posts")
+	cursor, err := postsCollection.Find(ctx, bson.D{{"id", postId}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var posts []Post
+	if err = cursor.All(ctx, &posts); err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	if len(posts) < 1 {
+		return nil, errors.New(fmt.Sprintf(`Post %s not found =(`, postId))
+	}
+	return &posts[0], nil
 }
