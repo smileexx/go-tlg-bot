@@ -47,10 +47,11 @@ func reactOnMessage(msg telegram.Message) error {
 
 		j := rand.Intn(len(media))
 		item := media[j]
+		caption := strings.Join(post.Tags, " ") + " " + parser.PostUrl + post.Id
 		if item.Type == parser.MediaTypeImg {
-			return telegram.SendPhoto(msg, item.Src, strings.Join(post.Tags, " "))
+			return telegram.SendPhoto(msg, item.Src, caption)
 		} else {
-			return telegram.SendVideo(msg, item.Src, strings.Join(post.Tags, " "))
+			return telegram.SendVideo(msg, item.Src, caption)
 		}
 
 	}

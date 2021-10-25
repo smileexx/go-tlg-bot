@@ -42,7 +42,7 @@ func listenServer() {
 
 func updateInterval() {
 	for {
-		time.Sleep(30 * time.Minute)
 		parser.Request("")
+		time.Sleep(30 * time.Minute)
 	}
 }

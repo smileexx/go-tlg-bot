@@ -1,25 +1,28 @@
 package parser
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"log"
 	"main/db"
 	"net/http"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
-const postUrl = "http://joyreactor.cc/post/"
+const PostUrl = "http://joyreactor.cc/post/"
 
 var artTags = []string{"#3Dэротика", "#artбарышня", "#ero_art", "#арт_барышня"}
 
 const (
 	MediaTypeImg = "img"
+	MediaTypeMp4 = "mp4"
 	MediaTypeGif = "gif"
 )
 
 const (
-	videoSelector = "video source[type='video/mp4']"
-	imgSelector   = "img"
+	videoSelector   = "video source[type='video/mp4']"
+	fullImgSelector = "a.prettyPhotoLink"
+	imgSelector     = "img"
 )
 
 func Request(page string) {
@@ -69,7 +72,10 @@ func Request(page string) {
 			media := db.Media{Shown: false}
 			if srcEl := imageEl.Find(videoSelector).First(); srcEl.Nodes != nil {
 				media.Src, _ = srcEl.Attr("src")
-				media.Type = MediaTypeGif
+				media.Type = MediaTypeMp4
+			} else if srcEl := imageEl.Find(fullImgSelector).First(); srcEl.Nodes != nil {
+				media.Src, _ = srcEl.Attr("href")
+				media.Type = MediaTypeImg
 			} else if srcEl := imageEl.Find(imgSelector).First(); srcEl.Nodes != nil {
 				media.Src, _ = srcEl.Attr("src")
 				media.Type = MediaTypeImg

@@ -53,17 +53,19 @@ type OutMessage struct {
 }
 
 type OutPhoto struct {
-	ChatId        int    `json:"chat_id"`
-	Photo         string `json:"photo"`
-	Caption       string `json:"caption,omitempty"`
-	ReplayToMsgId int    `json:"reply_to_message_id,omitempty"`
+	ChatId          int    `json:"chat_id"`
+	Photo           string `json:"photo"`
+	Caption         string `json:"caption,omitempty"`
+	CaptionEntities string `json:"caption_entities,omitempty"`
+	ReplayToMsgId   int    `json:"reply_to_message_id,omitempty"`
 }
 
 type OutVideo struct {
-	ChatId        int    `json:"chat_id"`
-	Video         string `json:"video"`
-	Caption       string `json:"caption,omitempty"`
-	ReplayToMsgId int    `json:"reply_to_message_id,omitempty"`
+	ChatId          int    `json:"chat_id"`
+	Video           string `json:"video"`
+	Caption         string `json:"caption,omitempty"`
+	CaptionEntities string `json:"caption_entities,omitempty"`
+	ReplayToMsgId   int    `json:"reply_to_message_id,omitempty"`
 }
 
 type OutMediaPhotoGroup struct {

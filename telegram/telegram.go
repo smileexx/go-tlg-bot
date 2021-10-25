@@ -51,8 +51,9 @@ func SendPhoto(msg Message, srcUrl string, caption string) error {
 		ChatId:  msg.Chat.Id,
 		Photo:   srcUrl,
 		Caption: caption,
+		// "entities":[{"offset":10,"length":4,"type":"hashtag"},{"offset":15,"length":48,"type":"url"}]}
 	}
-	outPhoto.ReplayToMsgId = msg.Id
+	// outPhoto.ReplayToMsgId = msg.Id
 	return sendJson(PathSendPhoto, outPhoto)
 }
 
@@ -62,7 +63,7 @@ func SendVideo(msg Message, srcUrl string, caption string) error {
 		Video:   srcUrl,
 		Caption: caption,
 	}
-	outVideo.ReplayToMsgId = msg.Id
+	// outVideo.ReplayToMsgId = msg.Id
 	return sendJson(PathSendVideo, outVideo)
 }
 
