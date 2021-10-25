@@ -85,11 +85,11 @@ func commandTag(msg telegram.Message) error {
 		return nil
 	}
 	tag := tags[0]
-	posts := db.SelectPostsByTag(tag)
+	posts, err := db.SelectPostsByTag(tag)
 	// exit if no posts
-	if len(posts) < 1 {
+	if err != nil {
 		telegram.SendMessage(msg, "Nothing found by tag "+tag)
-		return nil
+		return err
 	}
 	i := rand.Intn(len(posts))
 	post := posts[i]

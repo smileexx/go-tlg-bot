@@ -101,20 +101,21 @@ func SelectPostGifs() {
 	log.Println(posts)
 }
 
-func SelectPostsByTag(tag string) []Post {
+func SelectPostsByTag(tag string) ([]Post, error) {
+	var posts []Post
 	postsCollection := db.Collection("posts")
-	sel := fmt.Sprintf(`{"tags": { "tags" : { $regex : /"%s"/i } } }`, tag)
+	sel := fmt.Sprintf(`{ "tags" : { $regex : "/%s/i" } }`, tag)
 	var bdoc interface{}
 	err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
 	cursor, err := postsCollection.Find(ctx, bdoc)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return posts, err
 	}
-	var posts []Post
 	if err = cursor.All(ctx, &posts); err != nil {
 		log.Fatal(err)
 	}
-	return posts
+	return posts, nil
 }
 
 func SelectPostsById(postId string) (*Post, error) {
