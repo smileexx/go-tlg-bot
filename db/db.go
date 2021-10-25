@@ -50,6 +50,22 @@ func GetRandomImages() []OldImage {
 	return images
 }
 
+func GetRandomPosts(limit int) []Post {
+	imagesCollection := db.Collection("posts")
+	matchStage := bson.D{{"$match", bson.D{{"media", bson.D{{"$elemMatch", bson.D{{"shown", false}}}}}}}}
+	// matchStage := bson.D{{"$match", bson.D{{"shown", bson.D{{"$in", bson.A{nil, false}}}}}}}
+	matchSample := bson.D{{"$sample", bson.D{{"size", limit}}}}
+	cursor, err := imagesCollection.Aggregate(ctx, mongo.Pipeline{matchStage, matchSample})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var posts []Post
+	if err = cursor.All(ctx, &posts); err != nil {
+		log.Fatal(err)
+	}
+	return posts
+}
+
 func InsertPosts(posts []Post) {
 	postsCollection := db.Collection("posts")
 	var docs []interface{}

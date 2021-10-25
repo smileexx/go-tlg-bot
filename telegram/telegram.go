@@ -13,6 +13,7 @@ const (
 	PathSetWebhook     = "/setWebhook"
 	PathSendMessage    = "/sendMessage"
 	PathSendPhoto      = "/sendPhoto"
+	PathSendVideo      = "/sendVideo"
 	PathSendMediaGroup = "/sendMediaGroup"
 )
 
@@ -53,6 +54,16 @@ func SendPhoto(msg Message, srcUrl string, caption string) error {
 	}
 	outPhoto.ReplayToMsgId = msg.Id
 	return sendJson(PathSendPhoto, outPhoto)
+}
+
+func SendVideo(msg Message, srcUrl string, caption string) error {
+	outVideo := OutVideo{
+		ChatId:  msg.Chat.Id,
+		Video:   srcUrl,
+		Caption: caption,
+	}
+	outVideo.ReplayToMsgId = msg.Id
+	return sendJson(PathSendVideo, outVideo)
 }
 
 func sendMessage(msg Message) error {

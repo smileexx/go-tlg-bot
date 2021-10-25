@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"main/db"
+	"main/parser"
 	"main/telegram"
 	"math/rand"
 	"net/http"
@@ -39,10 +40,19 @@ func reactOnMessage(msg telegram.Message) error {
 	//TODO: do something if needs
 
 	if strings.HasPrefix(msg.Text, "/boobs") {
-		images := db.GetRandomImages()
-		i := rand.Intn(len(images))
-		image := images[i]
-		return telegram.SendPhoto(msg, image.SrcUrl, image.Tags)
+		posts := db.GetRandomPosts(10)
+		i := rand.Intn(len(posts))
+		post := posts[i]
+		media := post.Media
+
+		j := rand.Intn(len(media))
+		item := media[j]
+		if item.Type == parser.MediaTypeImg {
+			return telegram.SendPhoto(msg, item.Src, strings.Join(post.Tags, " "))
+		} else {
+			return telegram.SendVideo(msg, item.Src, strings.Join(post.Tags, " "))
+		}
+
 	}
 
 	return nil

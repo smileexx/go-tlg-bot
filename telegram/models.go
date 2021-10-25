@@ -59,6 +59,13 @@ type OutPhoto struct {
 	ReplayToMsgId int    `json:"reply_to_message_id,omitempty"`
 }
 
+type OutVideo struct {
+	ChatId        int    `json:"chat_id"`
+	Video         string `json:"video"`
+	Caption       string `json:"caption,omitempty"`
+	ReplayToMsgId int    `json:"reply_to_message_id,omitempty"`
+}
+
 type OutMediaPhotoGroup struct {
 	ChatId        int               `json:"chat_id"`
 	Media         []InputMediaPhoto `json:"media"`
