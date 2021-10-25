@@ -100,7 +100,7 @@ func SelectPostGifs() {
 	log.Println(posts)
 }
 
-func SelectPostByTag(tag string) {
+func SelectPostsByTag(tag string) []Post {
 	postsCollection := db.Collection("posts")
 	sel := fmt.Sprintf(`{"tags": "%s" }`, tag)
 	var bdoc interface{}
@@ -113,5 +113,5 @@ func SelectPostByTag(tag string) {
 	if err = cursor.All(ctx, &posts); err != nil {
 		log.Fatal(err)
 	}
-	log.Println(posts)
+	return posts
 }

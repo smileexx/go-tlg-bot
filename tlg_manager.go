@@ -10,9 +10,14 @@ import (
 	"main/telegram"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
+
+const postBatchCount = 30
+
+var postsBuffer []db.Post
 
 func init() {
 	db.CreateConnection()
@@ -40,23 +45,65 @@ func reactOnMessage(msg telegram.Message) error {
 	//TODO: do something if needs
 
 	if strings.HasPrefix(msg.Text, "/boobs") {
-		posts := db.GetRandomPosts(10)
-		i := rand.Intn(len(posts))
-		post := posts[i]
-		media := post.Media
+		return commandBoobs(msg)
+	}
 
-		j := rand.Intn(len(media))
-		item := media[j]
-		caption := strings.Join(post.Tags, " ") + " " + parser.PostUrl + post.Id
-		if item.Type == parser.MediaTypeImg {
-			return telegram.SendPhoto(msg, item.Src, caption)
-		} else {
-			return telegram.SendVideo(msg, item.Src, caption)
-		}
-
+	if strings.HasPrefix(msg.Text, "/tag") {
+		return commandTag(msg)
 	}
 
 	return nil
+}
+
+func commandBoobs(msg telegram.Message) error {
+	log.Println("buffer len", len(postsBuffer))
+	if len(postsBuffer) < 1 {
+		postsBuffer = db.GetRandomPosts(postBatchCount)
+	}
+
+	// exit if no posts
+	if len(postsBuffer) < 1 {
+		return nil
+	}
+
+	i := rand.Intn(len(postsBuffer))
+	post := postsBuffer[i]
+	media := post.Media
+	// remove used item
+	postsBuffer = append(postsBuffer[:i], postsBuffer[i+1:]...)
+
+	j := rand.Intn(len(media))
+	item := media[j]
+	caption := strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
+	if item.Type == parser.MediaTypeImg {
+		return telegram.SendPhoto(msg, item.Src, caption)
+	} else {
+		return telegram.SendVideo(msg, item.Src, caption)
+	}
+}
+
+func commandTag(msg telegram.Message) error {
+	regex := *regexp.MustCompile(`#[_\wА-Яа-я]+`)
+	tag := regex.FindStringSubmatch(msg.Text)
+	if len(tag) < 1 {
+		return nil
+	}
+	posts := db.SelectPostsByTag(tag[0])
+	// exit if no posts
+	if len(posts) < 1 {
+		return nil
+	}
+	i := rand.Intn(len(posts))
+	post := posts[i]
+	media := post.Media
+	j := rand.Intn(len(media))
+	item := media[j]
+	caption := strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
+	if item.Type == parser.MediaTypeImg {
+		return telegram.SendPhoto(msg, item.Src, caption)
+	} else {
+		return telegram.SendVideo(msg, item.Src, caption)
+	}
 }
 
 /**
