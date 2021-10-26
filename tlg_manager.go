@@ -35,9 +35,8 @@ func handleTelegramWebhook(w http.ResponseWriter, req *http.Request) {
 
 	log.Println(update)
 	err = reactOnMessage(update.Message)
-
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -189,7 +188,7 @@ func updateLoop() {
 			log.Println(update.Message)
 			err = reactOnMessage(update.Message)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}
 		time.Sleep(time.Second)

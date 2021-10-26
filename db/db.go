@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -104,16 +105,21 @@ func SelectPostGifs() {
 func SelectPostsByTag(tag string) ([]Post, error) {
 	var posts []Post
 	postsCollection := db.Collection("posts")
-	sel := fmt.Sprintf(`{ "tags" : { $regex : "/%s/i" } }`, tag)
-	var bdoc interface{}
-	err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
-	cursor, err := postsCollection.Find(ctx, bdoc)
+	filter := bson.D{{"tags", bson.D{
+		{"$regex", primitive.Regex{Pattern: tag, Options: "i"}},
+	}}}
+	// bson.RawValue{Type: bsontype.Regex, Value: []byte(fmt.Sprintf(`{"$regex":/%s/i}`, tag))}
+	// sel := fmt.Sprintf(`{ "tags" : { $regex : /%s/i } }`, tag)
+	// var bdoc interface{}
+	// err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
+	//bdoc := bson.D{{"tags", val}}
+	fmt.Printf("mgo query: %s\n", filter)
+	cursor, err := postsCollection.Find(ctx, filter)
 	if err != nil {
-		log.Println(err)
 		return posts, err
 	}
 	if err = cursor.All(ctx, &posts); err != nil {
-		log.Fatal(err)
+		return posts, err
 	}
 	return posts, nil
 }
