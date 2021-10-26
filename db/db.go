@@ -142,3 +142,14 @@ func SelectPostsById(postId string) (*Post, error) {
 	}
 	return &posts[0], nil
 }
+
+func SelectSchedule() (*Schedule, error) {
+	collection := db.Collection("schedule")
+	var schedule Schedule
+	err := collection.FindOne(ctx, bson.D{}).Decode(&schedule)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return &schedule, nil
+}

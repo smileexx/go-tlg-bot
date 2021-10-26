@@ -14,7 +14,10 @@ func main() {
 	log.Println("============== Run ==============")
 
 	go updateInterval()
+	go onTimerEvents()
 	// db.SelectPostByTag("#photo")
+
+	telegram.SetCommands()
 
 	if os.Getenv("MODE") == "local" {
 		log.Println("Run UpdateLoop")
@@ -44,5 +47,12 @@ func updateInterval() {
 	for {
 		parser.Request("")
 		time.Sleep(30 * time.Minute)
+	}
+}
+
+func onTimerEvents() {
+	for {
+		schedule()
+		time.Sleep(10 * time.Minute)
 	}
 }

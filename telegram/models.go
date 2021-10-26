@@ -35,6 +35,11 @@ type InputMediaItem struct {
 	Caption string `json:"caption,omitempty"`
 }
 
+type BotCommand struct {
+	Command     string `json:"command"`
+	Description string `json:"description"`
+}
+
 /**
 | ============== Custom Types ============== |
 */
@@ -72,4 +77,8 @@ type OutMediaGroup struct {
 	ChatId        int              `json:"chat_id"`
 	Media         []InputMediaItem `json:"media"`
 	ReplayToMsgId int              `json:"reply_to_message_id,omitempty"`
+}
+
+type OutMyCommands struct {
+	Commands []BotCommand `json:"commands"`
 }

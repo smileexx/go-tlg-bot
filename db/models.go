@@ -25,3 +25,8 @@ type Post struct {
 	Media []Media  `bson:"media"`
 	Tags  []string `bson:"tags"`
 }
+
+type Schedule struct {
+	Type string      `bson:"type"`
+	Data interface{} `bson:"data"`
+}

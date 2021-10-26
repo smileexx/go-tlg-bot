@@ -9,12 +9,24 @@ import (
 	"os"
 )
 
+var commands = map[string]string{
+	"help":  "display all commands",
+	"boobs": "send random ero image",
+}
+
+var help = map[string]string{
+	"/help":            "display this message =)",
+	"/tag #<tag_word>": "send random image with tag",
+	"/post <12345678>": "send post by post id",
+}
+
 const (
 	PathSetWebhook     = "/setWebhook"
 	PathSendMessage    = "/sendMessage"
 	PathSendPhoto      = "/sendPhoto"
 	PathSendVideo      = "/sendVideo"
 	PathSendMediaGroup = "/sendMediaGroup"
+	PathSetMyCommands  = "/setMyCommands"
 )
 
 const API_URL = "https://api.telegram.org/bot"
@@ -85,6 +97,25 @@ func SendMediaGroup(msg Message, media []InputMediaItem) error {
 		Media:  media,
 	}
 	return sendJson(PathSendMediaGroup, outData)
+}
+
+func SendHelp(msg Message) error {
+	var res string
+	for key, desc := range help {
+		res += key + "\t - " + desc + "\n"
+	}
+	return SendMessage(msg, res)
+}
+
+func SetCommands() error {
+	var commandList []BotCommand
+	for key, desc := range commands {
+		commandList = append(commandList, BotCommand{Command: key, Description: desc})
+	}
+	outData := OutMyCommands{
+		Commands: commandList,
+	}
+	return sendJson(PathSetMyCommands, outData)
 }
 
 func sendJson(urlPath string, outData interface{}) error {
