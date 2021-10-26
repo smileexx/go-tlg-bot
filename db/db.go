@@ -113,13 +113,15 @@ func SelectPostsByTag(tag string) ([]Post, error) {
 	// var bdoc interface{}
 	// err := bson.UnmarshalExtJSON([]byte(sel), true, &bdoc)
 	//bdoc := bson.D{{"tags", val}}
-	fmt.Printf("mgo query: %s\n", filter)
 	cursor, err := postsCollection.Find(ctx, filter)
 	if err != nil {
 		return posts, err
 	}
 	if err = cursor.All(ctx, &posts); err != nil {
 		return posts, err
+	}
+	if len(posts) < 1 {
+		return posts, errors.New("No data with tag " + tag)
 	}
 	return posts, nil
 }

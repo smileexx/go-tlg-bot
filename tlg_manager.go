@@ -17,6 +17,12 @@ import (
 
 const postBatchCount = 30
 
+const help string = `
+/help	- display this message =)
+/boobs	- send random ero image
+/tag #tag_word	- send random image with tag
+/post 12345		- send post by post id`
+
 var postsBuffer []db.Post
 
 func init() {
@@ -43,6 +49,9 @@ func handleTelegramWebhook(w http.ResponseWriter, req *http.Request) {
 func reactOnMessage(msg telegram.Message) error {
 	//TODO: do something if needs
 
+	if strings.HasPrefix(msg.Text, "/help") {
+		return telegram.SendMessage(msg, help)
+	}
 	if strings.HasPrefix(msg.Text, "/boobs") {
 		return commandBoobs(msg)
 	}
