@@ -27,6 +27,17 @@ type Post struct {
 }
 
 type Schedule struct {
-	Type string      `bson:"type"`
-	Data interface{} `bson:"data"`
+	Type       string      `bson:"type"`
+	Period     int         `bson:"period"`
+	ChatId     int         `bson:"chat_id"`
+	Title      string      `bson:"title,omitempty"`
+	LastAction int64       `bson:"last_action"`
+	Data       interface{} `bson:"data,omitempty"`
+}
+
+type User struct {
+	Id        int    `bson:"id"`
+	FirstName string `bson:"first_name"`
+	UserName  string `bson:"username"`
+	IsAdmin   bool   `bson:"is_admin"`
 }

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"main/db"
-	"main/parser"
+	"main/parser/reactor"
 	"main/telegram"
 	"math/rand"
 	"net/http"
@@ -45,15 +45,18 @@ func reactOnMessage(msg telegram.Message) error {
 
 	if strings.HasPrefix(msg.Text, "/help") {
 		return telegram.SendHelp(msg)
-	}
-	if strings.HasPrefix(msg.Text, "/boobs") {
+	} else if strings.HasPrefix(msg.Text, "/boobs") {
 		return commandBoobs(msg)
-	}
-	if strings.HasPrefix(msg.Text, "/tag") {
+	} else if strings.HasPrefix(msg.Text, "/tag") {
 		return commandTag(msg)
-	}
-	if strings.HasPrefix(msg.Text, "/post") {
+	} else if strings.HasPrefix(msg.Text, "/post") {
 		return commandPost(msg)
+	} else if strings.HasPrefix(msg.Text, "/feeds") {
+		return commandFeeds(msg)
+	} else if strings.HasPrefix(msg.Text, "/subscribe") {
+		return commandSubscribe(msg)
+	} else if strings.HasPrefix(msg.Text, "/unsubscribe") {
+		return commandUnsubscribe(msg)
 	}
 
 	return nil
@@ -126,8 +129,8 @@ func sendSingleMedia(msg telegram.Message, post db.Post) error {
 	media := post.Media
 	j := rand.Intn(len(media))
 	item := media[j]
-	caption := strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
-	if item.Type == parser.MediaTypeImg {
+	caption := strings.Join(post.Tags, " ") + "\n" + reactor.PostUrl + post.Id
+	if item.Type == reactor.MediaTypeImg {
 		return telegram.SendPhoto(msg, item.Src, caption)
 	} else {
 		return telegram.SendVideo(msg, item.Src, caption)
@@ -139,20 +142,47 @@ func sendGroupedMedia(msg telegram.Message, post db.Post) error {
 	var err error
 	for _, media := range post.Media {
 		input := telegram.InputMediaItem{Media: media.Src}
-		if media.Type == parser.MediaTypeImg {
+		if media.Type == reactor.MediaTypeImg {
 			input.Type = "photo"
-		} else if media.Type == parser.MediaTypeMp4 {
+		} else if media.Type == reactor.MediaTypeMp4 {
 			err = telegram.SendVideo(msg, media.Src, "")
 			continue
 		}
 		if len(mediaItems) == 0 {
-			input.Caption = strings.Join(post.Tags, " ") + "\n" + parser.PostUrl + post.Id
+			input.Caption = strings.Join(post.Tags, " ") + "\n" + reactor.PostUrl + post.Id
 		}
 		mediaItems = append(mediaItems, input)
 	}
 	if len(mediaItems) > 0 {
 		err = telegram.SendMediaGroup(msg, mediaItems)
 	}
+	return err
+}
+
+func commandFeeds(msg telegram.Message) error {
+	var err = telegram.SendMessage(msg, getFeedsList())
+	return err
+}
+
+func commandSubscribe(msg telegram.Message) error {
+	isAdmin, err := telegram.IsUserAdmin(msg)
+
+	var res = "Success 👍"
+	if isAdmin != true || err != nil {
+		res = "‼️ [Forbidden] Only admins permitted to run this command ⛔️"
+	} else {
+		err = subscribe(msg)
+		if err != nil {
+			res = fmt.Sprint(err)
+		}
+	}
+	err = telegram.SendMessage(msg, res)
+	return err
+}
+
+func commandUnsubscribe(msg telegram.Message) error {
+
+	var err = telegram.SendMessage(msg, "Ok")
 	return err
 }
 

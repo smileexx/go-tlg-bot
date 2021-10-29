@@ -40,6 +40,16 @@ type BotCommand struct {
 	Description string `json:"description"`
 }
 
+type ChatMember struct {
+	Status      string `json:"status"`
+	User        User   `json:"user"`
+	IsAnonymous bool   `json:"is_anonymous"`
+}
+
+type ChatAdministrators struct {
+	Members []ChatMember `json:"result"`
+}
+
 /**
 | ============== Custom Types ============== |
 */

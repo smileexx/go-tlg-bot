@@ -7,11 +7,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 var commands = map[string]string{
 	"help":  "display all commands",
 	"boobs": "send random ero image",
+	"feeds": "list of available feeds to subscribe",
 }
 
 var help = map[string]string{
@@ -21,12 +23,13 @@ var help = map[string]string{
 }
 
 const (
-	PathSetWebhook     = "/setWebhook"
-	PathSendMessage    = "/sendMessage"
-	PathSendPhoto      = "/sendPhoto"
-	PathSendVideo      = "/sendVideo"
-	PathSendMediaGroup = "/sendMediaGroup"
-	PathSetMyCommands  = "/setMyCommands"
+	PathSetWebhook            = "/setWebhook"
+	PathSendMessage           = "/sendMessage"
+	PathSendPhoto             = "/sendPhoto"
+	PathSendVideo             = "/sendVideo"
+	PathSendMediaGroup        = "/sendMediaGroup"
+	PathSetMyCommands         = "/setMyCommands"
+	PathGetChatAdministrators = "/getChatAdministrators"
 )
 
 const API_URL = "https://api.telegram.org/bot"
@@ -140,4 +143,26 @@ func DeleteWebhook() {
 
 func SetWebhook() {
 	http.Get(BuildUrl(PathSetWebhook + "?url=" + os.Getenv("HOST") + os.Getenv("BOT_TOKEN")))
+}
+
+func getChatAdministrators(chatId int) ([]ChatMember, error) {
+	resp, err := http.Get(BuildUrl(PathGetChatAdministrators + "?chat_id=" + strconv.Itoa(chatId)))
+	var members ChatAdministrators
+	body, _ := ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal(body, &members)
+
+	return members.Members, err
+}
+
+func IsUserAdmin(msg Message) (bool, error) {
+	members, err := getChatAdministrators(msg.Chat.Id)
+	if err != nil {
+		return false, err
+	}
+	for _, user := range members {
+		if user.User.Id == msg.User.Id {
+			return true, err
+		}
+	}
+	return false, err
 }

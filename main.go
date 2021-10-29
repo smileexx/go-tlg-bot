@@ -3,7 +3,7 @@ package main
 import (
 	"io"
 	"log"
-	"main/parser"
+	"main/parser/reactor"
 	"main/telegram"
 	"net/http"
 	"os"
@@ -43,13 +43,19 @@ func listenServer() {
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
 
+/**
+ *	Parse content updates from
+ */
 func updateInterval() {
 	for {
-		parser.Request("")
+		reactor.Request("")
 		time.Sleep(30 * time.Minute)
 	}
 }
 
+/**
+ *	Send news for subscribers
+ */
 func onTimerEvents() {
 	for {
 		schedule()

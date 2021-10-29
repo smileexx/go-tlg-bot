@@ -143,6 +143,22 @@ func SelectPostsById(postId string) (*Post, error) {
 	return &posts[0], nil
 }
 
+func SaveSchedule(schedule Schedule) error {
+	collection := db.Collection("schedule")
+	filter := bson.D{{"chat_id", schedule.ChatId}, {"type", schedule.Type}}
+	data, err := bson.Marshal(schedule)
+	if err != nil {
+		return err
+	}
+	var doc *bson.D
+	err = bson.Unmarshal(data, &doc)
+	update := bson.D{{"$set", doc}}
+	opt := options.UpdateOptions{}
+	opt.SetUpsert(true)
+	_, err = collection.UpdateOne(ctx, filter, update, &opt)
+	return err
+}
+
 func SelectSchedule() (*Schedule, error) {
 	collection := db.Collection("schedule")
 	var schedule Schedule
