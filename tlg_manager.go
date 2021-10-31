@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"main/db"
@@ -63,22 +64,7 @@ func reactOnMessage(msg telegram.Message) error {
 }
 
 func commandBoobs(msg telegram.Message) error {
-	log.Println("buffer len", len(postsBuffer))
-	if len(postsBuffer) < 1 {
-		postsBuffer = db.GetRandomPosts(postBatchCount)
-	}
-
-	// exit if no posts
-	if len(postsBuffer) < 1 {
-		return nil
-	}
-
-	i := rand.Intn(len(postsBuffer))
-	post := postsBuffer[i]
-	// remove used item
-	postsBuffer = append(postsBuffer[:i], postsBuffer[i+1:]...)
-
-	return sendSingleMedia(msg, post)
+	return sendRandomBoobs(msg.Chat.Id)
 }
 
 func commandTag(msg telegram.Message) error {
@@ -98,7 +84,7 @@ func commandTag(msg telegram.Message) error {
 	}
 	i := rand.Intn(len(posts))
 	post := posts[i]
-	return sendSingleMedia(msg, post)
+	return sendSingleMedia(msg.Chat.Id, post)
 }
 
 func commandPost(msg telegram.Message) error {
@@ -119,21 +105,48 @@ func commandPost(msg telegram.Message) error {
 	if len(post.Media) > 1 {
 		return sendGroupedMedia(msg, *post)
 	} else if len(post.Media) == 1 {
-		return sendSingleMedia(msg, *post)
+		return sendSingleMedia(msg.Chat.Id, *post)
 	}
 
 	return nil
 }
 
-func sendSingleMedia(msg telegram.Message, post db.Post) error {
+func sendRandomBoobs(chatId int) error {
+	post, err := getRandomPost()
+	if err != nil {
+		return err
+	}
+	return sendSingleMedia(chatId, post)
+}
+
+func getRandomPost() (db.Post, error) {
+	var post db.Post
+	log.Println("buffer len", len(postsBuffer))
+	if len(postsBuffer) < 1 {
+		postsBuffer = db.GetRandomPosts(postBatchCount)
+	}
+
+	// exit if no posts
+	if len(postsBuffer) < 1 {
+		return post, errors.New("No posts available")
+	}
+
+	i := rand.Intn(len(postsBuffer))
+	post = postsBuffer[i]
+	// remove used item
+	postsBuffer = append(postsBuffer[:i], postsBuffer[i+1:]...)
+	return post, nil
+}
+
+func sendSingleMedia(chatId int, post db.Post) error {
 	media := post.Media
 	j := rand.Intn(len(media))
 	item := media[j]
 	caption := strings.Join(post.Tags, " ") + "\n" + reactor.PostUrl + post.Id
 	if item.Type == reactor.MediaTypeImg {
-		return telegram.SendPhoto(msg, item.Src, caption)
+		return telegram.SendPhoto(chatId, item.Src, caption)
 	} else {
-		return telegram.SendVideo(msg, item.Src, caption)
+		return telegram.SendVideo(chatId, item.Src, caption)
 	}
 }
 
@@ -145,7 +158,7 @@ func sendGroupedMedia(msg telegram.Message, post db.Post) error {
 		if media.Type == reactor.MediaTypeImg {
 			input.Type = "photo"
 		} else if media.Type == reactor.MediaTypeMp4 {
-			err = telegram.SendVideo(msg, media.Src, "")
+			err = telegram.SendVideo(msg.Chat.Id, media.Src, "")
 			continue
 		}
 		if len(mediaItems) == 0 {
@@ -165,25 +178,47 @@ func commandFeeds(msg telegram.Message) error {
 }
 
 func commandSubscribe(msg telegram.Message) error {
-	isAdmin, err := telegram.IsUserAdmin(msg)
-
 	var res = "Success 👍"
-	if isAdmin != true || err != nil {
-		res = "‼️ [Forbidden] Only admins permitted to run this command ⛔️"
-	} else {
+	err := isUserAdmin(msg)
+	if err == nil {
 		err = subscribe(msg)
 		if err != nil {
 			res = fmt.Sprint(err)
 		}
+	} else {
+		res = err.Error()
 	}
 	err = telegram.SendMessage(msg, res)
 	return err
 }
 
 func commandUnsubscribe(msg telegram.Message) error {
-
-	var err = telegram.SendMessage(msg, "Ok")
+	var res = "Success 👍"
+	err := isUserAdmin(msg)
+	if err == nil {
+		err = unsubscribe(msg)
+		if err != nil {
+			res = fmt.Sprint(err)
+		}
+	} else {
+		res = err.Error()
+	}
+	err = telegram.SendMessage(msg, res)
 	return err
+}
+
+func isUserAdmin(msg telegram.Message) error {
+	if msg.Chat.Type == "private" {
+		return nil
+	}
+
+	isAdmin, err := telegram.IsUserAdmin(msg)
+
+	if isAdmin != true || err != nil {
+		return errors.New("‼️ [Forbidden] Only admins permitted to run this command ⛔️")
+	} else {
+		return nil
+	}
 }
 
 /**

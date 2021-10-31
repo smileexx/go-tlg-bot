@@ -159,13 +159,25 @@ func SaveSchedule(schedule Schedule) error {
 	return err
 }
 
-func SelectSchedule() (*Schedule, error) {
+func RemoveFromSchedule(chatId int, feedType string) error {
 	collection := db.Collection("schedule")
-	var schedule Schedule
-	err := collection.FindOne(ctx, bson.D{}).Decode(&schedule)
-	if err != nil {
-		log.Println(err)
-	}
+	filter := bson.D{{"chat_id", chatId}, {"type", feedType}}
+	_, err := collection.DeleteOne(ctx, filter)
+	return err
+}
 
-	return &schedule, nil
+func SelectSchedule() ([]Schedule, error) {
+	collection := db.Collection("schedule")
+	var schedules []Schedule
+	cursor, err := collection.Find(ctx, bson.D{})
+	if err != nil {
+		return schedules, err
+	}
+	if err = cursor.All(ctx, &schedules); err != nil {
+		return schedules, err
+	}
+	if len(schedules) < 1 {
+		return schedules, errors.New("No schedules")
+	}
+	return schedules, nil
 }

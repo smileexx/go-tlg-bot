@@ -60,10 +60,10 @@ func handleMessage(msg Message) error {
 	return SendMessage(msg, "")
 }
 
-func SendPhoto(msg Message, srcUrl string, caption string) error {
+func SendPhoto(chatId int, srcUrl string, caption string) error {
 	// outData := OutPhoto{ChatId: msg.Chat.Id, Photo: srcUrl}
 	outPhoto := OutPhoto{
-		ChatId:  msg.Chat.Id,
+		ChatId:  chatId,
 		Photo:   srcUrl,
 		Caption: caption,
 		// "entities":[{"offset":10,"length":4,"type":"hashtag"},{"offset":15,"length":48,"type":"url"}]}
@@ -72,9 +72,9 @@ func SendPhoto(msg Message, srcUrl string, caption string) error {
 	return sendJson(PathSendPhoto, outPhoto)
 }
 
-func SendVideo(msg Message, srcUrl string, caption string) error {
+func SendVideo(chatId int, srcUrl string, caption string) error {
 	outVideo := OutVideo{
-		ChatId:  msg.Chat.Id,
+		ChatId:  chatId,
 		Video:   srcUrl,
 		Caption: caption,
 	}

@@ -58,7 +58,10 @@ func updateInterval() {
  */
 func onTimerEvents() {
 	for {
-		schedule()
+		now := time.Now()
+		nowTs := now.Unix()
+		schedule(nowTs)
+
 		time.Sleep(10 * time.Minute)
 	}
 }
