@@ -3,17 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"main/db"
 	"main/parser/reactor"
+	"main/parser/reddit"
 	"main/telegram"
 	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const postBatchCount = 30
@@ -48,6 +50,8 @@ func reactOnMessage(msg telegram.Message) error {
 		return telegram.SendHelp(msg)
 	} else if strings.HasPrefix(msg.Text, "/boobs") {
 		return commandBoobs(msg)
+	} else if strings.HasPrefix(msg.Text, "/memes") {
+		return commandMemes(msg)
 	} else if strings.HasPrefix(msg.Text, "/tag") {
 		return commandTag(msg)
 	} else if strings.HasPrefix(msg.Text, "/post") {
@@ -67,6 +71,10 @@ func commandBoobs(msg telegram.Message) error {
 	return sendRandomBoobs(msg.Chat.Id)
 }
 
+func commandMemes(msg telegram.Message) error {
+	return sendRandomMemes(msg.Chat.Id)
+}
+
 func commandTag(msg telegram.Message) error {
 	regex := *regexp.MustCompile(`#[_\wА-Яа-я]+`)
 	tags := regex.FindStringSubmatch(msg.Text)
@@ -84,7 +92,7 @@ func commandTag(msg telegram.Message) error {
 	}
 	i := rand.Intn(len(posts))
 	post := posts[i]
-	return sendSingleMedia(msg.Chat.Id, post)
+	return sendSingleBoobs(msg.Chat.Id, post)
 }
 
 func commandPost(msg telegram.Message) error {
@@ -105,7 +113,7 @@ func commandPost(msg telegram.Message) error {
 	if len(post.Media) > 1 {
 		return sendGroupedMedia(msg, *post)
 	} else if len(post.Media) == 1 {
-		return sendSingleMedia(msg.Chat.Id, *post)
+		return sendSingleBoobs(msg.Chat.Id, *post)
 	}
 
 	return nil
@@ -116,7 +124,16 @@ func sendRandomBoobs(chatId int) error {
 	if err != nil {
 		return err
 	}
-	return sendSingleMedia(chatId, post)
+	return sendSingleBoobs(chatId, post)
+}
+
+func sendRandomMemes(chatId int) error {
+	post, err := reddit.GetRandomPost()
+	if err != nil {
+		return err
+	}
+
+	return telegram.SendPhoto(chatId, post.Src, post.Title+"\n"+post.Permalink)
 }
 
 func getRandomPost() (db.Post, error) {
@@ -138,7 +155,7 @@ func getRandomPost() (db.Post, error) {
 	return post, nil
 }
 
-func sendSingleMedia(chatId int, post db.Post) error {
+func sendSingleBoobs(chatId int, post db.Post) error {
 	media := post.Media
 	j := rand.Intn(len(media))
 	item := media[j]

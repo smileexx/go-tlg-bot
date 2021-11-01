@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/pkg/errors"
 	"main/db"
 	"main/telegram"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const MinPeriod = 30 // minutes
@@ -40,7 +41,7 @@ func schedule(nowTs int64) error {
 					tmp[sub.Type] = rPost
 					post = rPost
 				}
-				err = sendSingleMedia(sub.ChatId, post)
+				err = sendSingleBoobs(sub.ChatId, post)
 				break
 			case "memes":
 				break

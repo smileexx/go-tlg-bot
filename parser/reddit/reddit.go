@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
+const host = "https://www.reddit.com"
 const url = "https://www.reddit.com/r/ProgrammerHumor.json"
 
 var sources = []string{
@@ -22,9 +24,21 @@ func Parse() ([]Post, error) {
 	var posts []Post
 	update := httpGet(url)
 	for _, p := range update.Data.Children {
-		posts = append(posts, Post(p.Data))
+		post := Post(p.Data)
+		post.Permalink = host + post.Permalink
+		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func GetRandomPost() (Post, error) {
+	var post Post
+	posts, err := Parse()
+	if err != nil {
+		return post, err
+	}
+	i := rand.Intn(len(posts))
+	return posts[i], nil
 }
 
 func httpGet(url string) Update {

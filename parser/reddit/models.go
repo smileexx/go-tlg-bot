@@ -5,6 +5,7 @@ type Post struct {
 	Id          string
 	Src         string
 	Description string
+	Permalink   string
 }
 
 type Update struct {
@@ -17,6 +18,7 @@ type Update struct {
 				Id          string `json:"id"`
 				Src         string `json:"url_overridden_by_dest"`
 				Description string `json:"description"`
+				Permalink   string `json:"permalink"`
 			} `json:"data"`
 		} `json:"children"`
 	} `json:"data"`

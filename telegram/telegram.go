@@ -17,9 +17,11 @@ var commands = map[string]string{
 }
 
 var help = map[string]string{
-	"/help":            "display this message =)",
-	"/tag #<tag_word>": "send random image with tag",
-	"/post <12345678>": "send post by post id",
+	"/help":                           "display this message =)",
+	"/tag #<tag_word>":                "send random image with tag",
+	"/post <12345678>":                "send post by post id",
+	"/subscribe <feed> <?period min>": "subscribe to subject [for admin]",
+	"/unsubscribe <feed>":             "unsubscribe [for admin]",
 }
 
 const (
