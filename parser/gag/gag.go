@@ -1,4 +1,4 @@
-package reddit
+package gag
 
 import (
 	"encoding/json"
@@ -9,29 +9,25 @@ import (
 	"net/http"
 )
 
-const host = "https://www.reddit.com"
-const url = "https://www.reddit.com/r/ProgrammerHumor.json"
-
-//var sources = []string{
-//	"https://www.reddit.com/r/ProgrammerHumor.json",
-//}
+const url = "https://9gag.com/v1/group-posts/tag/funny/fresh"
 
 func Parse() ([]Post, error) {
-	// var updates []Update
-	// for _, url := range sources {
-	// update := httpGet(url)
-	// 	updates = append(updates, update)
-	// }
 	var posts []Post
 	update := httpGet(url)
 	for _, p := range update.Data.Children {
-		post := Post(p.Data)
-		post.Permalink = host + post.Permalink
-		if post.IsVideo {
+		var post = Post{
+			Id:        p.Id,
+			Title:     p.Title,
+			Permalink: p.Permalink,
+		}
+		if p.Type == "Animation" {
 			post.Type = parser.MediaTypeMp4
+			post.Src = p.Images.Animated.Src
 		} else {
 			post.Type = parser.MediaTypeImg
+			post.Src = p.Images.Image.Src
 		}
+
 		posts = append(posts, post)
 	}
 	return posts, nil

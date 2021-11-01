@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"main/parser/reactor"
+	// "main/parser/reddit"
 	"main/telegram"
 	"net/http"
 	"os"
@@ -12,6 +13,9 @@ import (
 
 func main() {
 	log.Println("============== Run ==============")
+
+	//gag.Parse()
+	//os.Exit(0)
 
 	go updateInterval()
 	go onTimerEvents()
