@@ -26,6 +26,17 @@ type Post struct {
 	Tags  []string `bson:"tags"`
 }
 
+type MemePost struct {
+	Id        string   `bson:"id"`
+	Title     string   `bson:"title"`
+	Type      string   `bson:"type"`
+	Src       string   `bson:"src"`
+	Permalink string   `bson:"permalink"`
+	Shown     bool     `bson:"shown"`
+	Created   int      `bson:"created"`
+	Tags      []string `bson:"tags"`
+}
+
 type Schedule struct {
 	Type       string      `bson:"type"`
 	Period     int         `bson:"period"`

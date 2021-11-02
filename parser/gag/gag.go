@@ -7,6 +7,8 @@ import (
 	"main/parser"
 	"math/rand"
 	"net/http"
+
+	cloudflarebp "github.com/DaRealFreak/cloudflare-bp-go"
 )
 
 const url = "https://9gag.com/v1/group-posts/tag/funny/fresh"
@@ -46,13 +48,11 @@ func GetRandomPost() (Post, error) {
 func httpGet(url string) Update {
 	var update Update
 	client := &http.Client{}
-
+	client.Transport = cloudflarebp.AddCloudFlareByPass(client.Transport)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	req.Header.Set("User-Agent", " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -60,7 +60,9 @@ func httpGet(url string) Update {
 	}
 
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
 		log.Fatalln(err)
 	}

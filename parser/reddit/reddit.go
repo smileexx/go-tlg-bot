@@ -4,47 +4,64 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"main/db"
 	"main/parser"
-	"math/rand"
 	"net/http"
 )
 
-const host = "https://www.reddit.com"
-const url = "https://www.reddit.com/r/ProgrammerHumor.json"
-
-//var sources = []string{
-//	"https://www.reddit.com/r/ProgrammerHumor.json",
-//}
-
-func Parse() ([]Post, error) {
-	// var updates []Update
-	// for _, url := range sources {
-	// update := httpGet(url)
-	// 	updates = append(updates, update)
-	// }
-	var posts []Post
-	update := httpGet(url)
-	for _, p := range update.Data.Children {
-		post := Post(p.Data)
-		post.Permalink = host + post.Permalink
-		if post.IsVideo {
-			post.Type = parser.MediaTypeMp4
-		} else {
-			post.Type = parser.MediaTypeImg
-		}
-		posts = append(posts, post)
-	}
-	return posts, nil
+type Update struct {
+	Kind string `json:"kind"`
+	Data struct {
+		After    string `json:"after"`
+		Children []struct {
+			Data struct {
+				Id        string `json:"id"`
+				Title     string `json:"title"`
+				Type      string
+				Src       string  `json:"url_overridden_by_dest"`
+				Permalink string  `json:"permalink"`
+				Tag       string  `json:"subreddit"`
+				IsVideo   bool    `json:"is_video"`
+				Created   float32 `json:"created_utc"`
+			} `json:"data"`
+		} `json:"children"`
+	} `json:"data"`
 }
 
-func GetRandomPost() (Post, error) {
-	var post Post
-	posts, err := Parse()
-	if err != nil {
-		return post, err
+const host = "https://www.reddit.com"
+
+// const url = "https://www.reddit.com/r/ProgrammerHumor.json"
+
+var sources = []string{
+	"https://www.reddit.com/r/ProgrammerHumor/top.json?t=day",
+	"https://www.reddit.com/r/WTF/new.json?limit=50",
+}
+
+func Parse() error {
+	var posts []db.MemePost
+	for _, url := range sources {
+		update := httpGet(url)
+		for _, p := range update.Data.Children {
+			var post = db.MemePost{
+				Id:        p.Data.Id,
+				Title:     p.Data.Title,
+				Type:      parser.MediaTypeImg,
+				Src:       p.Data.Src,
+				Permalink: p.Data.Permalink,
+				Shown:     false,
+				Created:   int(p.Data.Created),
+				Tags:      []string{p.Data.Tag},
+			}
+			post.Permalink = host + post.Permalink
+			if p.Data.IsVideo {
+				post.Type = parser.MediaTypeMp4
+			}
+			posts = append(posts, post)
+		}
+
 	}
-	i := rand.Intn(len(posts))
-	return posts[i], nil
+
+	return db.InsertMemesPosts(posts)
 }
 
 func httpGet(url string) Update {

@@ -7,7 +7,6 @@ import (
 	"log"
 	"main/db"
 	"main/parser/reactor"
-	"main/parser/reddit"
 	"main/telegram"
 	"math/rand"
 	"net/http"
@@ -21,6 +20,7 @@ import (
 const postBatchCount = 30
 
 var postsBuffer []db.Post
+var memesBuffer []db.MemePost
 
 func init() {
 	db.CreateConnection()
@@ -72,7 +72,8 @@ func commandBoobs(msg telegram.Message) error {
 }
 
 func commandMemes(msg telegram.Message) error {
-	return sendRandomMemes(msg.Chat.Id)
+	return sendRandomMeme(msg.Chat.Id)
+
 }
 
 func commandTag(msg telegram.Message) error {
@@ -127,13 +128,23 @@ func sendRandomBoobs(chatId int) error {
 	return sendSingleBoobs(chatId, post)
 }
 
-func sendRandomMemes(chatId int) error {
-	post, err := reddit.GetRandomPost()
-	if err != nil {
-		return err
+func getRandomMeme() (db.MemePost, error) {
+	var post db.MemePost
+	log.Println("buffer len", len(memesBuffer))
+	if len(memesBuffer) < 1 {
+		memesBuffer = db.GetRandomMemes(postBatchCount)
 	}
 
-	return telegram.SendPhoto(chatId, post.Src, post.Title+"\n"+post.Permalink)
+	// exit if no posts
+	if len(memesBuffer) < 1 {
+		return post, errors.New("No posts available")
+	}
+
+	i := rand.Intn(len(memesBuffer))
+	post = memesBuffer[i]
+	// remove used item
+	memesBuffer = append(memesBuffer[:i], memesBuffer[i+1:]...)
+	return post, nil
 }
 
 func getRandomPost() (db.Post, error) {
@@ -164,6 +175,23 @@ func sendSingleBoobs(chatId int, post db.Post) error {
 		return telegram.SendPhoto(chatId, item.Src, caption)
 	} else {
 		return telegram.SendVideo(chatId, item.Src, caption)
+	}
+}
+
+func sendRandomMeme(chatId int) error {
+	meme, err := getRandomMeme()
+	if err != nil {
+		return err
+	}
+	return sendSingleMeme(chatId, meme)
+}
+
+func sendSingleMeme(chatId int, meme db.MemePost) error {
+	caption := fmt.Sprintf("%s\n%s\n%s", meme.Title, strings.Join(meme.Tags, " "), meme.Permalink)
+	if meme.Type == reactor.MediaTypeImg {
+		return telegram.SendPhoto(chatId, meme.Src, caption)
+	} else {
+		return telegram.SendVideo(chatId, meme.Src, caption)
 	}
 }
 

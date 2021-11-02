@@ -25,7 +25,7 @@ const (
 	imgSelector     = "img"
 )
 
-func Request(page string) {
+func Parse(page string) {
 	if page != "" {
 		page = "/" + page
 	}

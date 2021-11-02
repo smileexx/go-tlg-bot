@@ -13,7 +13,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const dbName = "tlg-bot-db"
+const (
+	dbName     = "tlg-bot-db"
+	clSchedule = "schedule"
+	clBoobs    = "posts"
+	clMemes    = "memes"
+)
 
 var ctx = context.TODO()
 var client *mongo.Client
@@ -33,27 +38,8 @@ func CreateConnection() {
 	db = client.Database(dbName)
 }
 
-func GetRandomImages() []OldImage {
-	imagesCollection := db.Collection("images")
-	// opt := options.Find()
-	// // opt.SetSort(bson.D{{"_id", -1}})
-	// opt.SetLimit(100)
-	matchStage := bson.D{{"$match", bson.D{{"shown", bson.D{{"$in", bson.A{nil, false}}}}}}}
-	matchSample := bson.D{{"$sample", bson.D{{"size", 50}}}}
-	cursor, err := imagesCollection.Aggregate(ctx, mongo.Pipeline{matchStage, matchSample})
-	if err != nil {
-		log.Fatal(err)
-	}
-	var images []OldImage
-	if err = cursor.All(ctx, &images); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(images)
-	return images
-}
-
 func GetRandomPosts(limit int) []Post {
-	imagesCollection := db.Collection("posts")
+	imagesCollection := db.Collection(clBoobs)
 	matchStage := bson.D{{"$match", bson.D{{"media", bson.D{{"$elemMatch", bson.D{{"shown", false}}}}}}}}
 	// matchStage := bson.D{{"$match", bson.D{{"shown", bson.D{{"$in", bson.A{nil, false}}}}}}}
 	matchSample := bson.D{{"$sample", bson.D{{"size", limit}}}}
@@ -69,7 +55,7 @@ func GetRandomPosts(limit int) []Post {
 }
 
 func InsertPosts(posts []Post) {
-	postsCollection := db.Collection("posts")
+	postsCollection := db.Collection(clBoobs)
 	var docs []interface{}
 
 	for _, post := range posts {
@@ -87,7 +73,7 @@ func InsertPosts(posts []Post) {
 }
 
 func SelectPostGifs() {
-	postsCollection := db.Collection("posts")
+	postsCollection := db.Collection(clBoobs)
 	// bdoc := bson.D{{"media", bson.D{{"$elemMatch", bson.D{{"shown", true},{"type", "gif"} }}}}}
 	var bdoc interface{}
 	err := bson.UnmarshalExtJSON([]byte(`{"media": {"$elemMatch":{"shown":false, "type": "gif"}} }`), true, &bdoc)
@@ -104,7 +90,7 @@ func SelectPostGifs() {
 
 func SelectPostsByTag(tag string) ([]Post, error) {
 	var posts []Post
-	postsCollection := db.Collection("posts")
+	postsCollection := db.Collection(clBoobs)
 	filter := bson.D{{"tags", bson.D{
 		{"$regex", primitive.Regex{Pattern: tag, Options: "i"}},
 	}}}
@@ -127,7 +113,7 @@ func SelectPostsByTag(tag string) ([]Post, error) {
 }
 
 func SelectPostsById(postId string) (*Post, error) {
-	postsCollection := db.Collection("posts")
+	postsCollection := db.Collection(clBoobs)
 	cursor, err := postsCollection.Find(ctx, bson.D{{"id", postId}})
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +130,7 @@ func SelectPostsById(postId string) (*Post, error) {
 }
 
 func SaveSchedule(schedule Schedule) error {
-	collection := db.Collection("schedule")
+	collection := db.Collection(clSchedule)
 	filter := bson.D{{"chat_id", schedule.ChatId}, {"type", schedule.Type}}
 	data, err := bson.Marshal(schedule)
 	if err != nil {
@@ -160,14 +146,14 @@ func SaveSchedule(schedule Schedule) error {
 }
 
 func RemoveFromSchedule(chatId int, feedType string) error {
-	collection := db.Collection("schedule")
+	collection := db.Collection(clSchedule)
 	filter := bson.D{{"chat_id", chatId}, {"type", feedType}}
 	_, err := collection.DeleteOne(ctx, filter)
 	return err
 }
 
 func SelectSchedule() ([]Schedule, error) {
-	collection := db.Collection("schedule")
+	collection := db.Collection(clSchedule)
 	var schedules []Schedule
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
@@ -180,4 +166,37 @@ func SelectSchedule() ([]Schedule, error) {
 		return schedules, errors.New("No schedules")
 	}
 	return schedules, nil
+}
+
+func InsertMemesPosts(posts []MemePost) error {
+	collection := db.Collection(clMemes)
+	var docs []interface{}
+
+	for _, post := range posts {
+		doc, _ := bson.Marshal(post)
+		docs = append(docs, doc)
+	}
+	opt := options.InsertMany()
+	opt.SetOrdered(false)
+	res, err := collection.InsertMany(ctx, docs, opt)
+	if err != nil {
+		return err
+	}
+	log.Println(res)
+	return nil
+}
+
+func GetRandomMemes(limit int) []MemePost {
+	collection := db.Collection(clMemes)
+	matchStage := bson.D{{"$match", bson.D{{"shown", false}}}}
+	matchSample := bson.D{{"$sample", bson.D{{"size", limit}}}}
+	cursor, err := collection.Aggregate(ctx, mongo.Pipeline{matchStage, matchSample})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var posts []MemePost
+	if err = cursor.All(ctx, &posts); err != nil {
+		return posts
+	}
+	return posts
 }

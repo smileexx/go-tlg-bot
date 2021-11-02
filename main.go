@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 	"main/parser/reactor"
-	// "main/parser/reddit"
+	"main/parser/reddit"
 	"main/telegram"
 	"net/http"
 	"os"
@@ -13,9 +13,6 @@ import (
 
 func main() {
 	log.Println("============== Run ==============")
-
-	//gag.Parse()
-	//os.Exit(0)
 
 	go updateInterval()
 	go onTimerEvents()
@@ -52,7 +49,8 @@ func listenServer() {
  */
 func updateInterval() {
 	for {
-		reactor.Request("")
+		reactor.Parse("")
+		reddit.Parse()
 		time.Sleep(30 * time.Minute)
 	}
 }

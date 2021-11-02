@@ -25,6 +25,7 @@ var feedsDescription = map[string]string{
 
 func schedule(nowTs int64) error {
 	subscriptions, err := db.SelectSchedule()
+	// select same content for all subscribers
 	var tmp = make(map[string]interface{})
 	for _, sub := range subscriptions {
 		if nowTs-sub.LastAction >= int64(sub.Period*60) {
@@ -44,6 +45,18 @@ func schedule(nowTs int64) error {
 				err = sendSingleBoobs(sub.ChatId, post)
 				break
 			case "memes":
+				var meme db.MemePost
+				if _, ok := tmp[sub.Type]; ok {
+					meme = tmp[sub.Type].(db.MemePost)
+				} else {
+					rMeme, err := getRandomMeme()
+					if err != nil {
+						return err
+					}
+					tmp[sub.Type] = rMeme
+					meme = rMeme
+				}
+				err = sendSingleMeme(sub.ChatId, meme)
 				break
 			}
 
