@@ -21,8 +21,13 @@ type Update struct {
 				Src       string  `json:"url_overridden_by_dest"`
 				Permalink string  `json:"permalink"`
 				Tag       string  `json:"subreddit"`
-				IsVideo   bool    `json:"is_video"`
 				Created   float32 `json:"created_utc"`
+				IsVideo   bool    `json:"is_video"`
+				Media     struct {
+					Video struct {
+						Src string `json:"fallback_url"`
+					} `json:"reddit_video"`
+				} `json:"media"`
 			} `json:"data"`
 		} `json:"children"`
 	} `json:"data"`
@@ -33,7 +38,7 @@ const host = "https://www.reddit.com"
 // const url = "https://www.reddit.com/r/ProgrammerHumor.json"
 
 var sources = []string{
-	"https://www.reddit.com/r/ProgrammerHumor/top.json?t=day",
+	"https://www.reddit.com/r/ProgrammerHumor/top.json?t=day&limit=50",
 	"https://www.reddit.com/r/WTF/new.json?limit=50",
 }
 
@@ -50,11 +55,12 @@ func Parse() error {
 				Permalink: p.Data.Permalink,
 				Shown:     false,
 				Created:   int(p.Data.Created),
-				Tags:      []string{p.Data.Tag},
+				Tags:      []string{"#" + p.Data.Tag},
 			}
 			post.Permalink = host + post.Permalink
 			if p.Data.IsVideo {
 				post.Type = parser.MediaTypeMp4
+				post.Src = p.Data.Media.Video.Src
 			}
 			posts = append(posts, post)
 		}
