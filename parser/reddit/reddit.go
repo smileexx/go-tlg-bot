@@ -38,8 +38,9 @@ const host = "https://www.reddit.com"
 // const url = "https://www.reddit.com/r/ProgrammerHumor.json"
 
 var sources = []string{
-	"https://www.reddit.com/r/ProgrammerHumor/top.json?t=day&limit=50",
-	"https://www.reddit.com/r/WTF/new.json?limit=50",
+	"https://www.reddit.com/r/ProgrammerHumor/top.json",
+	"https://www.reddit.com/r/WTF/new.json",
+	"https://www.reddit.com/r/memes/top.json",
 }
 
 func Parse() error {
