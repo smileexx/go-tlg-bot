@@ -7,6 +7,7 @@ import (
 	"main/db"
 	"main/parser"
 	"net/http"
+	"strings"
 )
 
 type Update struct {
@@ -63,6 +64,13 @@ func Parse() error {
 				post.Type = parser.MediaTypeMp4
 				post.Src = p.Data.Media.Video.Src
 			}
+			if strings.HasSuffix(post.Src, parser.MediaTypeGif) {
+				post.Type = parser.MediaTypeGif
+			}
+			if post.Src == "" {
+				continue
+			}
+
 			posts = append(posts, post)
 		}
 

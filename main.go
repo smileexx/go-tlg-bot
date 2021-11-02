@@ -16,7 +16,6 @@ func main() {
 
 	go updateInterval()
 	go onTimerEvents()
-	// db.SelectPostByTag("#photo")
 
 	telegram.SetCommands()
 
