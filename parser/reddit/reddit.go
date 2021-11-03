@@ -24,6 +24,7 @@ type Update struct {
 				Tag       string  `json:"subreddit"`
 				Created   float32 `json:"created_utc"`
 				IsVideo   bool    `json:"is_video"`
+				PostHint  string  `json:"post_hint"`
 				Media     struct {
 					Video struct {
 						Src string `json:"fallback_url"`
@@ -33,6 +34,12 @@ type Update struct {
 		} `json:"children"`
 	} `json:"data"`
 }
+
+const (
+	postHintVideo = "hosted:video"
+	postHintImage = "image"
+	postHintLink  = "link"
+)
 
 const host = "https://www.reddit.com"
 
@@ -49,6 +56,10 @@ func Parse() error {
 	for _, url := range sources {
 		update := httpGet(url)
 		for _, p := range update.Data.Children {
+			if p.Data.PostHint == postHintLink {
+				// skip post if content Src is remote link
+				continue
+			}
 			var post = db.MemePost{
 				Id:        p.Data.Id,
 				Title:     p.Data.Title,
