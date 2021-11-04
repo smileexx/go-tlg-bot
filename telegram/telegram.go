@@ -13,13 +13,14 @@ import (
 var commands = map[string]string{
 	"help":  "display all commands",
 	"boobs": "send random ero image",
-	"feeds": "list of available feeds to subscribe",
+	"memes": "send random ero memes",
 }
 
 var help = map[string]string{
 	"/help":                           "display this message =)",
 	"/tag #<tag_word>":                "send random image with tag",
 	"/post <12345678>":                "send post by post id",
+	"/feeds":                          "list of available feeds to subscribe",
 	"/subscribe <feed> <?period min>": "subscribe to subject [for admin]",
 	"/unsubscribe <feed>":             "unsubscribe [for admin]",
 }
