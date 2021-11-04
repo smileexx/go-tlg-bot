@@ -28,6 +28,12 @@ func schedule(nowTs int64) error {
 	// select same content for all subscribers
 	var tmp = make(map[string]interface{})
 	for _, sub := range subscriptions {
+
+		chat := telegram.Chat{Id: sub.ChatId, Title: sub.Title, Type: "private"}
+		if sub.IsGroup {
+			chat.Type = "group"
+		}
+
 		if nowTs-sub.LastAction >= int64(sub.Period*60) {
 			switch sub.Type {
 			case "boobs":
@@ -42,8 +48,9 @@ func schedule(nowTs int64) error {
 					tmp[sub.Type] = rPost
 					post = rPost
 				}
-				sendSingleBoobs(sub.ChatId, post)
-				break
+
+				sendRandomSingleBoobsMedia(chat, post)
+
 			case "memes":
 				var meme db.MemePost
 				if _, ok := tmp[sub.Type]; ok {
@@ -56,13 +63,8 @@ func schedule(nowTs int64) error {
 					tmp[sub.Type] = rMeme
 					meme = rMeme
 				}
-				sendSingleMeme(sub.ChatId, meme)
-				if sub.IsGroup {
-					// mark as shown
-					meme.Shown = true
-					db.UpdateMeme(meme)
-				}
-				break
+				sendSingleMeme(chat, meme)
+
 			}
 
 			sub.LastAction = nowTs

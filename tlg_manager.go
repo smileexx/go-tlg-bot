@@ -17,7 +17,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const postBatchCount = 30
+const postBatchCount = 50
 
 var postsBuffer []db.Post
 var memesBuffer []db.MemePost
@@ -68,11 +68,11 @@ func reactOnMessage(msg telegram.Message) error {
 }
 
 func commandBoobs(msg telegram.Message) error {
-	return sendRandomBoobs(msg.Chat.Id)
+	return sendRandomBoobs(msg.Chat)
 }
 
 func commandMemes(msg telegram.Message) error {
-	return sendRandomMeme(msg.Chat.Id)
+	return sendRandomMeme(msg.Chat)
 
 }
 
@@ -93,7 +93,7 @@ func commandTag(msg telegram.Message) error {
 	}
 	i := rand.Intn(len(posts))
 	post := posts[i]
-	return sendSingleBoobs(msg.Chat.Id, post)
+	return sendRandomSingleBoobsMedia(msg.Chat, post)
 }
 
 func commandPost(msg telegram.Message) error {
@@ -114,18 +114,18 @@ func commandPost(msg telegram.Message) error {
 	if len(post.Media) > 1 {
 		return sendGroupedMedia(msg, *post)
 	} else if len(post.Media) == 1 {
-		return sendSingleBoobs(msg.Chat.Id, *post)
+		return sendRandomSingleBoobsMedia(msg.Chat, *post)
 	}
 
 	return nil
 }
 
-func sendRandomBoobs(chatId int) error {
+func sendRandomBoobs(chat telegram.Chat) error {
 	post, err := getRandomPost()
 	if err != nil {
 		return err
 	}
-	return sendSingleBoobs(chatId, post)
+	return sendRandomSingleBoobsMedia(chat, post)
 }
 
 func getRandomMeme() (db.MemePost, error) {
@@ -166,33 +166,46 @@ func getRandomPost() (db.Post, error) {
 	return post, nil
 }
 
-func sendSingleBoobs(chatId int, post db.Post) error {
+func sendRandomSingleBoobsMedia(chat telegram.Chat, post db.Post) error {
+	var err error
 	media := post.Media
 	j := rand.Intn(len(media))
 	item := media[j]
 	caption := strings.Join(post.Tags, " ") + "\n" + reactor.PostUrl + post.Id
+
 	if item.Type == reactor.MediaTypeImg {
-		return telegram.SendPhoto(chatId, item.Src, caption)
+		err = telegram.SendPhoto(chat.Id, item.Src, caption)
 	} else {
-		return telegram.SendVideo(chatId, item.Src, caption)
+		err = telegram.SendVideo(chat.Id, item.Src, caption)
 	}
+	if err == nil && chat.Type != "private" {
+		post.Media[j].Shown = true
+		db.UpdatePost(post)
+	}
+	return err
 }
 
-func sendRandomMeme(chatId int) error {
+func sendRandomMeme(chat telegram.Chat) error {
 	meme, err := getRandomMeme()
 	if err != nil {
 		return err
 	}
-	return sendSingleMeme(chatId, meme)
+	return sendSingleMeme(chat, meme)
 }
 
-func sendSingleMeme(chatId int, meme db.MemePost) error {
+func sendSingleMeme(chat telegram.Chat, meme db.MemePost) error {
+	var err error
 	caption := fmt.Sprintf("%s\n%s\n%s", meme.Title, strings.Join(meme.Tags, " "), meme.Permalink)
 	if meme.Type == reactor.MediaTypeImg {
-		return telegram.SendPhoto(chatId, meme.Src, caption)
+		err = telegram.SendPhoto(chat.Id, meme.Src, caption)
 	} else {
-		return telegram.SendVideo(chatId, meme.Src, caption)
+		err = telegram.SendVideo(chat.Id, meme.Src, caption)
 	}
+	if err == nil && chat.Type != "private" {
+		meme.Shown = true
+		db.UpdateMeme(meme)
+	}
+	return err
 }
 
 func sendGroupedMedia(msg telegram.Message, post db.Post) error {
