@@ -200,3 +200,19 @@ func GetRandomMemes(limit int) []MemePost {
 	}
 	return posts
 }
+
+func UpdateMeme(meme MemePost) error {
+	collection := db.Collection(clMemes)
+	filter := bson.D{{"id", meme.Id}}
+	data, err := bson.Marshal(meme)
+	if err != nil {
+		return err
+	}
+	var doc *bson.D
+	err = bson.Unmarshal(data, &doc)
+	update := bson.D{{"$set", doc}}
+	opt := options.UpdateOptions{}
+	opt.SetUpsert(true)
+	_, err = collection.UpdateOne(ctx, filter, update, &opt)
+	return err
+}

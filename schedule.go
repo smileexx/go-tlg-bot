@@ -42,7 +42,7 @@ func schedule(nowTs int64) error {
 					tmp[sub.Type] = rPost
 					post = rPost
 				}
-				err = sendSingleBoobs(sub.ChatId, post)
+				sendSingleBoobs(sub.ChatId, post)
 				break
 			case "memes":
 				var meme db.MemePost
@@ -56,7 +56,12 @@ func schedule(nowTs int64) error {
 					tmp[sub.Type] = rMeme
 					meme = rMeme
 				}
-				err = sendSingleMeme(sub.ChatId, meme)
+				sendSingleMeme(sub.ChatId, meme)
+				if sub.IsGroup {
+					// mark as shown
+					meme.Shown = true
+					db.UpdateMeme(meme)
+				}
 				break
 			}
 

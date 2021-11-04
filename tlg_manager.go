@@ -259,7 +259,7 @@ func isUserAdmin(msg telegram.Message) error {
 
 	isAdmin, err := telegram.IsUserAdmin(msg)
 
-	if isAdmin != true || err != nil {
+	if !isAdmin || err != nil {
 		return errors.New("‼️ [Forbidden] Only admins permitted to run this command ⛔️")
 	} else {
 		return nil
