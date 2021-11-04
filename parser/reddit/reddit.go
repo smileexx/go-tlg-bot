@@ -111,7 +111,7 @@ func httpGet(url string) Update {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = json.Unmarshal(body, &update)
+	json.Unmarshal(body, &update)
 
 	return update
 }

@@ -41,6 +41,7 @@ type Schedule struct {
 	Type       string      `bson:"type"`
 	Period     int         `bson:"period"`
 	ChatId     int         `bson:"chat_id"`
+	IsGroup    bool        `bson:"is_group"`
 	Title      string      `bson:"title,omitempty"`
 	LastAction int64       `bson:"last_action"`
 	Data       interface{} `bson:"data,omitempty"`

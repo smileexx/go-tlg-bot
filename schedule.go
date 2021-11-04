@@ -81,9 +81,11 @@ func subscribe(msg telegram.Message) error {
 	match := regex.FindStringSubmatch(msg.Text)
 
 	title := msg.User.FirstName + " @" + msg.User.UserName
+	isGroup := false
 
 	if msg.Chat.Type != "private" {
 		title = msg.Chat.Title
+		isGroup = true
 	}
 
 	if len(match) == 4 {
@@ -107,6 +109,7 @@ func subscribe(msg telegram.Message) error {
 			ChatId:     msg.Chat.Id,
 			Title:      title,
 			LastAction: nowTs,
+			IsGroup:    isGroup,
 		}
 		return db.SaveSchedule(schedule)
 	} else {
